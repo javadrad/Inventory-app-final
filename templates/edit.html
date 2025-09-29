@@ -1,1 +1,69 @@
-<!DOCTYPE html><html lang="fa"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>ویرایش ابزار</title></head><body><h1>نسخه edit.html آماده</h1></body></html>
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ویرایش ابزار</title>
+    <link href="https://cdn.fontcdn.ir/Font/BiNazanin/BiNazanin.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Bi Nazanin', sans-serif;
+            background: #f4f7fb;
+            margin: 0;
+            padding: 20px;
+            direction: rtl;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            font-weight: bold;
+        }
+        form {
+            margin-bottom: 20px;
+            background: #fff;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        input, select {
+            padding: 8px;
+            margin: 5px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+        }
+        button {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            background: linear-gradient(145deg, #4CAF50, #45a049);
+            color: #fff;
+            cursor: pointer;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+            font-weight: bold;
+        }
+        button:hover {
+            background: linear-gradient(145deg, #45a049, #4CAF50);
+        }
+    </style>
+</head>
+<body>
+    <h1>ویرایش ابزار</h1>
+    <form method="post" action="/edit/{{ item[0] }}" enctype="multipart/form-data">
+        نوع ابزار: <input type="text" name="tool_type" value="{{ item[1] }}" required><br>
+        سریال: <input type="text" name="serial_number" value="{{ item[2] }}" required><br>
+        سایز: <input type="text" name="size" value="{{ item[3] }}"><br>
+        نوع رزوه: <input type="text" name="thread_type" value="{{ item[4] }}"><br>
+        مکان ابزار: <input type="text" name="location" value="{{ item[5] }}"><br>
+        وضعیت:
+        <select name="status">
+            <option value="آماده" {% if item[6]=='آماده' %}selected{% endif %}>✅ آماده استفاده</option>
+            <option value="تعمیر" {% if item[6]=='تعمیر' %}selected{% endif %}>🛠 نیاز به تعمیر</option>
+            <option value="سندبلاست" {% if item[6]=='سندبلاست' %}selected{% endif %}>🌀 نیاز به سندبلاست</option>
+            <option value="خراب" {% if item[6]=='خراب' %}selected{% endif %}>❌ خراب</option>
+        </select><br>
+        گزارش (PDF): <input type="file" name="report_file" accept=".pdf"><br>
+        <button type="submit">ذخیره تغییرات</button>
+    </form>
+</body>
+</html>
