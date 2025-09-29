@@ -1,7 +1,5 @@
-
 from flask import Flask, render_template, request, redirect, url_for
-import sqlite3
-import os
+import sqlite3, os
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = "uploads"
@@ -126,9 +124,5 @@ def delete(item_id):
     conn.close()
     return redirect(url_for("index"))
 
-@app.route('/uploads/<filename>')
-def uploaded_file(filename):
-    return redirect(url_for('static', filename='uploads/' + filename))
-
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
