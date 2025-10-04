@@ -49,7 +49,7 @@
     <!-- فرم ثبت ابزار -->
     <form method="POST" action="/add" enctype="multipart/form-data">
         <input type="text" name="tool_type" placeholder="نوع ابزار" required>
-        <input type="text" name="serial_number" placeholder="سریال" required>
+        <input type="text" name="serial_number" placeholder="شماره سریال" required>
         <input type="text" name="size" placeholder="سایز">
         <input type="text" name="thread_type" placeholder="نوع رزوه">
         <input type="text" name="location" placeholder="محل نگهداری">
@@ -66,7 +66,7 @@
     <!-- فرم جستجو -->
     <form method="get" action="/">
         <input type="text" name="tool_type" value="{{ tool_type }}" placeholder="نوع ابزار">
-        <input type="text" name="serial_number" value="{{ serial_number }}" placeholder="سریال">
+        <input type="text" name="serial_number" value="{{ serial_number }}" placeholder="شماره سریال">
         <input type="text" name="size" value="{{ size }}" placeholder="سایز">
         <button type="submit">جستجو</button>
         <a href="/"><button type="button">نمایش همه</button></a>
@@ -77,7 +77,7 @@
         <tr>
             <th>شناسه</th>
             <th>نوع ابزار</th>
-            <th>سریال</th>
+            <th>شماره سریال</th>
             <th>سایز</th>
             <th>نوع رزوه</th>
             <th>محل نگهداری</th>
