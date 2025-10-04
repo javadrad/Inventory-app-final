@@ -31,7 +31,7 @@ def init_db():
 
 init_db()
 
-@app.route("/", methods=["GET", "POST"])
+@app.route("/", methods=["GET"])
 def index():
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
@@ -78,7 +78,9 @@ def add():
 
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
-    cursor.execute("INSERT INTO inventory (tool_type, serial_number, size, thread_type, location, status, report_link) VALUES (?, ?, ?, ?, ?, ?, ?)",
+    cursor.execute("""
+        INSERT INTO inventory (tool_type, serial_number, size, thread_type, location, status, report_link)
+        VALUES (?, ?, ?, ?, ?, ?, ?)""",
                    (tool_type, serial_number, size, thread_type, location, status, report_link))
     conn.commit()
     conn.close()
@@ -107,9 +109,9 @@ def edit(item_id):
             report_file.save(report_path)
             report_link = f"/static/reports/{filename}"
 
-        cursor.execute("""UPDATE inventory SET
-                          tool_type=?, serial_number=?, size=?, thread_type=?, location=?, status=?, report_link=?
-                          WHERE id=?""",
+        cursor.execute("""
+            UPDATE inventory SET tool_type=?, serial_number=?, size=?, thread_type=?, location=?, status=?, report_link=?
+            WHERE id=?""",
                        (tool_type, serial_number, size, thread_type, location, status, report_link, item_id))
         conn.commit()
         conn.close()
@@ -128,10 +130,6 @@ def delete(item_id):
     conn.commit()
     conn.close()
     return redirect(url_for("index"))
-
-@app.route("/uploads/<filename>")
-def uploaded_file(filename):
-    return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
 
 if __name__ == "__main__":
     app.run(debug=True)
