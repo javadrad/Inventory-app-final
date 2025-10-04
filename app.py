@@ -1,104 +1,69 @@
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory
-import sqlite3
 import os
+import sqlite3
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 
-# پوشه آپلود
-UPLOAD_FOLDER = "uploads"
-app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+# مسیر ذخیره فایل‌ها
+UPLOAD_FOLDER = os.path.join(os.getcwd(), "uploads")
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
 
-# ایجاد جدول دیتابیس در صورت نبود
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+
+# ------------------- دیتابیس -------------------
 def init_db():
     conn = sqlite3.connect("inventory.db")
-    cursor = conn.cursor()
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS inventory (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            tool_type TEXT,
-            serial_number TEXT,
-            size TEXT,
-            thread_type TEXT,
-            location TEXT,
-            status TEXT,
-            report_link TEXT
-        )
-    """)
+    c = conn.cursor()
+    c.execute("""CREATE TABLE IF NOT EXISTS inventory (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT,
+                    quantity INTEGER,
+                    location TEXT,
+                    report_file TEXT
+                )""")
     conn.commit()
     conn.close()
 
 init_db()
 
-# صفحه اصلی + جستجو
+# ------------------- روت‌ها -------------------
 @app.route("/", methods=["GET", "POST"])
 def index():
-    conn = sqlite3.connect("inventory.db")
-    cursor = conn.cursor()
+    if request.method == "POST":
+        name = request.form["name"]
+        quantity = request.form["quantity"]
+        location = request.form["location"]
 
-    tool_type = request.args.get("tool_type", "")
-    serial_number = request.args.get("serial_number", "")
-    size = request.args.get("size", "")
+        # ذخیره فایل گزارش
+        file = request.files.get("report")
+        filename = None
+        if file and file.filename != "":
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
 
-    query = "SELECT * FROM inventory WHERE 1=1"
-    params = []
+        conn = sqlite3.connect("inventory.db")
+        c = conn.cursor()
+        c.execute("INSERT INTO inventory (name, quantity, location, report_file) VALUES (?, ?, ?, ?)",
+                  (name, quantity, location, filename))
+        conn.commit()
+        conn.close()
 
-    if tool_type:
-        query += " AND tool_type LIKE ?"
-        params.append(f"%{tool_type}%")
-    if serial_number:
-        query += " AND serial_number LIKE ?"
-        params.append(f"%{serial_number}%")
-    if size:
-        query += " AND size LIKE ?"
-        params.append(f"%{size}%")
-
-    cursor.execute(query, params)
-    items = cursor.fetchall()
-    conn.close()
-
-    return render_template("index.html", items=items, tool_type=tool_type, serial_number=serial_number, size=size)
-
-# افزودن آیتم جدید + آپلود فایل
-@app.route("/add", methods=["POST"])
-def add():
-    tool_type = request.form["tool_type"]
-    serial_number = request.form["serial_number"]
-    size = request.form["size"]
-    thread_type = request.form["thread_type"]
-    location = request.form["location"]
-    status = request.form["status"]
-
-    report_file = request.files["report_file"]
-    report_link = ""
-    if report_file and report_file.filename.endswith(".pdf"):
-        filepath = os.path.join(app.config["UPLOAD_FOLDER"], report_file.filename)
-        report_file.save(filepath)
-        report_link = report_file.filename  # فقط اسم فایل ذخیره میشه
+        return redirect(url_for("index"))
 
     conn = sqlite3.connect("inventory.db")
-    cursor = conn.cursor()
-    cursor.execute("INSERT INTO inventory (tool_type, serial_number, size, thread_type, location, status, report_link) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                   (tool_type, serial_number, size, thread_type, location, status, report_link))
-    conn.commit()
+    c = conn.cursor()
+    c.execute("SELECT * FROM inventory")
+    items = c.fetchall()
     conn.close()
 
-    return redirect(url_for("index"))
+    return render_template("index.html", items=items)
 
-# حذف آیتم
-@app.route("/delete/<int:item_id>")
-def delete(item_id):
-    conn = sqlite3.connect("inventory.db")
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM inventory WHERE id=?", (item_id,))
-    conn.commit()
-    conn.close()
-    return redirect(url_for("index"))
-
-# نمایش فایل‌های آپلودشده
-@app.route('/uploads/<filename>')
+@app.route("/uploads/<filename>")
 def uploaded_file(filename):
     return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
 
+# ------------------- اجرا -------------------
 if __name__ == "__main__":
     app.run(debug=True)
