@@ -1,12 +1,15 @@
-from flask import Flask, render_template, request, redirect, url_for
-import sqlite3, os
+from flask import Flask, render_template, request, redirect, url_for, send_from_directory
+import sqlite3
+import os
 
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = "uploads"
 
-if not os.path.exists(app.config['UPLOAD_FOLDER']):
-    os.makedirs(app.config['UPLOAD_FOLDER'])
+# پوشه آپلود
+UPLOAD_FOLDER = "uploads"
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+# ایجاد جدول دیتابیس در صورت نبود
 def init_db():
     conn = sqlite3.connect("inventory.db")
     cursor = conn.cursor()
@@ -27,6 +30,7 @@ def init_db():
 
 init_db()
 
+# صفحه اصلی + جستجو
 @app.route("/", methods=["GET", "POST"])
 def index():
     conn = sqlite3.connect("inventory.db")
@@ -55,6 +59,7 @@ def index():
 
     return render_template("index.html", items=items, tool_type=tool_type, serial_number=serial_number, size=size)
 
+# افزودن آیتم جدید + آپلود فایل
 @app.route("/add", methods=["POST"])
 def add():
     tool_type = request.form["tool_type"]
@@ -64,12 +69,12 @@ def add():
     location = request.form["location"]
     status = request.form["status"]
 
-    report_file = request.files.get("report_file")
+    report_file = request.files["report_file"]
     report_link = ""
-    if report_file:
-        report_path = os.path.join(app.config['UPLOAD_FOLDER'], report_file.filename)
-        report_file.save(report_path)
-        report_link = "/" + report_path
+    if report_file and report_file.filename.endswith(".pdf"):
+        filepath = os.path.join(app.config["UPLOAD_FOLDER"], report_file.filename)
+        report_file.save(filepath)
+        report_link = report_file.filename  # فقط اسم فایل ذخیره میشه
 
     conn = sqlite3.connect("inventory.db")
     cursor = conn.cursor()
@@ -80,41 +85,7 @@ def add():
 
     return redirect(url_for("index"))
 
-@app.route("/edit/<int:item_id>", methods=["GET", "POST"])
-def edit(item_id):
-    conn = sqlite3.connect("inventory.db")
-    cursor = conn.cursor()
-
-    if request.method == "POST":
-        tool_type = request.form["tool_type"]
-        serial_number = request.form["serial_number"]
-        size = request.form["size"]
-        thread_type = request.form["thread_type"]
-        location = request.form["location"]
-        status = request.form["status"]
-
-        report_file = request.files.get("report_file")
-        report_link = ""
-        if report_file:
-            report_path = os.path.join(app.config['UPLOAD_FOLDER'], report_file.filename)
-            report_file.save(report_path)
-            report_link = "/" + report_path
-
-        cursor.execute("""
-            UPDATE inventory
-            SET tool_type=?, serial_number=?, size=?, thread_type=?, location=?, status=?, report_link=?
-            WHERE id=?
-        """, (tool_type, serial_number, size, thread_type, location, status, report_link, item_id))
-
-        conn.commit()
-        conn.close()
-        return redirect(url_for("index"))
-
-    cursor.execute("SELECT * FROM inventory WHERE id=?", (item_id,))
-    item = cursor.fetchone()
-    conn.close()
-    return render_template("edit.html", item=item)
-
+# حذف آیتم
 @app.route("/delete/<int:item_id>")
 def delete(item_id):
     conn = sqlite3.connect("inventory.db")
@@ -124,5 +95,10 @@ def delete(item_id):
     conn.close()
     return redirect(url_for("index"))
 
+# نمایش فایل‌های آپلودشده
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
+
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    app.run(debug=True)
