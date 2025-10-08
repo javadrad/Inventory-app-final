@@ -3,11 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <title>ویرایش ابزار</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        body {
+            font-family: "B Nazanin", Arial, sans-serif;
+            direction: rtl;
+            margin: 20px;
+        }
+        h1 { text-align: center; font-weight: bold; }
+        form {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 12px;
+        }
+        input, select, button {
+            margin: 5px;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #aaa;
+        }
+        button {
+            background: #2196F3;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 2px 2px 5px #999;
+        }
+    </style>
 </head>
 <body>
     <h1>ویرایش ابزار</h1>
-    <form method="POST" enctype="multipart/form-data" class="form-box">
+
+    <form method="POST" enctype="multipart/form-data">
         <input type="text" name="tool_type" value="{{ item[1] }}" required>
         <input type="text" name="serial_number" value="{{ item[2] }}" required>
         <input type="text" name="size" value="{{ item[3] }}">
@@ -18,17 +44,13 @@
             <option value="تعمیر" {% if item[6]=='تعمیر' %}selected{% endif %}>🛠 نیاز به تعمیر</option>
             <option value="سندبلاست" {% if item[6]=='سندبلاست' %}selected{% endif %}>🌀 نیاز به سندبلاست</option>
             <option value="خراب" {% if item[6]=='خراب' %}selected{% endif %}>❌ خراب</option>
+            <option value="Class 2" {% if item[6]=='Class 2' %}selected{% endif %}>📘 Class 2</option>
         </select>
-        <br><br>
-        گزارش (PDF):
-        {% if item[7] %}
-            <a href="{{ item[7] }}" target="_blank">📄 مشاهده گزارش فعلی</a>
-        {% endif %}
-        <input type="file" name="report_file">
+        گزارش (PDF): <input type="file" name="report_file">
         <input type="hidden" name="report_link" value="{{ item[7] }}">
-        <br><br>
         <button type="submit">ثبت تغییرات</button>
     </form>
-    <a href="/"><button>🔙 بازگشت</button></a>
+
+    <a href="/"><button>بازگشت</button></a>
 </body>
 </html>
