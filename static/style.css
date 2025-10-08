@@ -41,12 +41,20 @@ table {
     border-collapse: collapse;
     margin-top: 15px;
     background: white;
+    font-size: 16px; /* فونت بزرگ‌تر جدول */
+    font-variant-numeric: tabular-nums; /* برای هم‌ترازی اعداد */
 }
 
 th, td {
     border: 1px solid #ccc;
     padding: 8px;
     text-align: center;
+    font-size: 17px; /* کمی درشت‌تر */
+}
+
+td {
+    unicode-bidi: embed;
+    direction: ltr; /* اعداد انگلیسی */
 }
 
 th {
