@@ -24,9 +24,8 @@
         <button type="submit">➕ ثبت ابزار</button>
     </form>
 
-    <!-- فرم بارگذاری اکسل -->
-    <form method="POST" action="/upload_excel" enctype="multipart/form-data" style="margin-top:10px;">
-        <input type="file" name="excel_file" accept=".xlsx" required>
+    <form method="POST" action="/upload_excel" enctype="multipart/form-data">
+        <input type="file" name="excel_file" accept=".xlsx,.xls" required>
         <button type="submit">📁 بارگذاری اکسل</button>
     </form>
 
@@ -34,12 +33,13 @@
         <tr>
             <th>شناسه</th>
             <th>نوع ابزار</th>
-            <th>سریال</th>
+            <th>شماره سریال</th>
             <th>سایز</th>
-            <th>رزوه</th>
-            <th>محل</th>
+            <th>نوع رزوه</th>
+            <th>محل نگهداری</th>
             <th>وضعیت</th>
             <th>گزارش</th>
+            <th>حذف</th>
         </tr>
         {% for item in items %}
         <tr>
@@ -57,6 +57,7 @@
                     -
                 {% endif %}
             </td>
+            <td><a href="/delete/{{ item[0] }}"><button>❌ حذف</button></a></td>
         </tr>
         {% endfor %}
     </table>
