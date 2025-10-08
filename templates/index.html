@@ -6,9 +6,10 @@
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <h1>مدیریت ابزار در گردش</h1>
+    <h1>📊 مدیریت ابزار در گردش</h1>
 
-    <form method="POST" action="/add" enctype="multipart/form-data">
+    <!-- فرم ثبت ابزار -->
+    <form method="POST" action="/add" enctype="multipart/form-data" class="form-box">
         <input type="text" name="tool_type" placeholder="نوع ابزار" required>
         <input type="text" name="serial_number" placeholder="شماره سریال" required>
         <input type="text" name="size" placeholder="سایز">
@@ -24,11 +25,23 @@
         <button type="submit">➕ ثبت ابزار</button>
     </form>
 
-    <form method="POST" action="/upload_excel" enctype="multipart/form-data">
-        <input type="file" name="excel_file" accept=".xlsx,.xls" required>
-        <button type="submit">📁 بارگذاری اکسل</button>
+    <!-- فرم آپلود فایل اکسل -->
+    <form method="POST" action="/upload_excel" enctype="multipart/form-data" class="form-box">
+        <label>📁 بارگذاری فایل اکسل</label>
+        <input type="file" name="excel_file" accept=".xlsx, .xls" required>
+        <button type="submit">بارگذاری</button>
     </form>
 
+    <!-- فرم جستجو -->
+    <form method="get" action="/" class="form-box">
+        <input type="text" name="tool_type" value="{{ tool_type }}" placeholder="نوع ابزار">
+        <input type="text" name="serial_number" value="{{ serial_number }}" placeholder="شماره سریال">
+        <input type="text" name="size" value="{{ size }}" placeholder="سایز">
+        <button type="submit">🔍 جستجو</button>
+        <a href="/"><button type="button">نمایش همه</button></a>
+    </form>
+
+    <!-- جدول ابزارها -->
     <table>
         <tr>
             <th>شناسه</th>
@@ -39,6 +52,7 @@
             <th>محل نگهداری</th>
             <th>وضعیت</th>
             <th>گزارش</th>
+            <th>ویرایش</th>
             <th>حذف</th>
         </tr>
         {% for item in items %}
@@ -52,11 +66,16 @@
             <td>{{ item[6] }}</td>
             <td>
                 {% if item[7] %}
-                    <a href="{{ item[7] }}" target="_blank">📄 مشاهده</a>
+                    <a href="{{ item[7] }}" target="_blank">📄 مشاهده گزارش</a>
                 {% else %}
                     -
                 {% endif %}
+                <form method="POST" action="/upload_report/{{ item[0] }}" enctype="multipart/form-data">
+                    <input type="file" name="report_file" accept="application/pdf">
+                    <button type="submit">📤 آپلود گزارش</button>
+                </form>
             </td>
+            <td><a href="/edit/{{ item[0] }}"><button>✏️ ویرایش</button></a></td>
             <td><a href="/delete/{{ item[0] }}"><button>❌ حذف</button></a></td>
         </tr>
         {% endfor %}
