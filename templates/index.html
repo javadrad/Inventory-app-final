@@ -3,12 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>مدیریت ابزار در گردش</title>
-    <link rel="manifest" href="/static/manifest.json">
-    <script>
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/static/service-worker.js');
-      }
-    </script>
     <style>
         body {
             font-family: "B Nazanin", Arial, sans-serif;
@@ -47,32 +41,27 @@
         }
         th { background: #eee; }
         a { color: blue; text-decoration: none; }
-        .flash {
-            padding: 10px;
-            margin-bottom: 20px;
-            border-radius: 8px;
-        }
-        .flash-success { background-color: #d4edda; color: #155724; }
-        .flash-error { background-color: #f8d7da; color: #721c24; }
     </style>
 </head>
 <body>
+
     <h1>مدیریت ابزار در گردش</h1>
 
-    <!-- نمایش پیام flash -->
+    <!-- پیام‌های موفقیت یا خطا -->
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
-        {% for category, message in messages %}
-          <div class="flash flash-{{ category }}">{{ message }}</div>
-        {% endfor %}
+        <script>
+          {% for category, message in messages %}
+            alert("{{ message }}");
+          {% endfor %}
+        </script>
       {% endif %}
     {% endwith %}
 
     <!-- فرم بارگذاری Excel -->
     <form method="POST" action="/" enctype="multipart/form-data">
-        <label>📁 بارگذاری فایل Excel:</label>
         <input type="file" name="excel_file" accept=".xlsx,.xls" required>
-        <button type="submit">بارگذاری و بروزرسانی دیتابیس</button>
+        <button type="submit">📁 بارگذاری اکسل</button>
     </form>
 
     <!-- فرم ثبت ابزار -->
@@ -136,5 +125,6 @@
         </tr>
         {% endfor %}
     </table>
+
 </body>
 </html>
