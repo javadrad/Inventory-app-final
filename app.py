@@ -5,7 +5,6 @@ from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 
-# مسیر ذخیره پایدار دیتابیس و فایل‌ها
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATABASE = os.path.join(BASE_DIR, "inventory.db")
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "static", "reports")
