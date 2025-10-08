@@ -3,48 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <title>مدیریت ابزار در گردش</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="manifest" href="/static/manifest.json">
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/static/service-worker.js');
+      }
+    </script>
+    <style>
+        body {
+            font-family: "B Nazanin", Arial, sans-serif;
+            direction: rtl;
+            margin: 20px;
+        }
+        h1 { text-align: center; font-weight: bold; }
+        form {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 12px;
+        }
+        input, select, button {
+            margin: 5px;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #aaa;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 2px 2px 5px #999;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            border: 1px solid #666;
+            padding: 8px;
+            text-align: center;
+        }
+        th { background: #eee; }
+        a { color: blue; text-decoration: none; }
+        .flash {
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+        .flash-success { background-color: #d4edda; color: #155724; }
+        .flash-error { background-color: #f8d7da; color: #721c24; }
+    </style>
 </head>
 <body>
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            <script>alert("{{ messages[0] }}");</script>
-        {% endif %}
-    {% endwith %}
-
     <h1>مدیریت ابزار در گردش</h1>
 
+    <!-- نمایش پیام flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash flash-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <!-- فرم بارگذاری Excel -->
+    <form method="POST" action="/" enctype="multipart/form-data">
+        <label>📁 بارگذاری فایل Excel:</label>
+        <input type="file" name="excel_file" accept=".xlsx,.xls" required>
+        <button type="submit">بارگذاری و بروزرسانی دیتابیس</button>
+    </form>
+
     <!-- فرم ثبت ابزار -->
-    <form method="POST" action="/add" enctype="multipart/form-data" class="form-box">
+    <form method="POST" action="/add" enctype="multipart/form-data">
         <input type="text" name="tool_type" placeholder="نوع ابزار" required>
         <input type="text" name="serial_number" placeholder="شماره سریال" required>
         <input type="text" name="size" placeholder="سایز">
         <input type="text" name="thread_type" placeholder="نوع رزوه">
         <input type="text" name="location" placeholder="محل نگهداری">
         <select name="status">
-            <option value="آماده">✅ آماده</option>
-            <option value="تعمیر">🛠 تعمیر</option>
-            <option value="سندبلاست">🌀 سندبلاست</option>
+            <option value="آماده">✅ آماده استفاده</option>
+            <option value="تعمیر">🛠 نیاز به تعمیر</option>
+            <option value="سندبلاست">🌀 نیاز به سندبلاست</option>
             <option value="خراب">❌ خراب</option>
         </select>
         گزارش (PDF): <input type="file" name="report_file">
-        <button type="submit" class="btn-green">➕ ثبت ابزار</button>
-    </form>
-
-    <!-- فرم بارگذاری فایل اکسل -->
-    <form method="POST" action="/upload_excel" enctype="multipart/form-data" class="form-box">
-        <label for="excel_file">📁 بارگذاری فایل اکسل:</label>
-        <input type="file" name="excel_file" accept=".xlsx" required>
-        <button type="submit" class="btn-blue">📥 وارد کردن از Excel</button>
+        <button type="submit">ثبت ابزار</button>
     </form>
 
     <!-- فرم جستجو -->
-    <form method="get" action="/" class="form-box">
+    <form method="get" action="/">
         <input type="text" name="tool_type" value="{{ tool_type }}" placeholder="نوع ابزار">
         <input type="text" name="serial_number" value="{{ serial_number }}" placeholder="شماره سریال">
         <input type="text" name="size" value="{{ size }}" placeholder="سایز">
-        <button type="submit" class="btn-blue">🔍 جستجو</button>
-        <a href="/"><button type="button" class="btn-gray">نمایش همه</button></a>
+        <button type="submit">جستجو</button>
+        <a href="/"><button type="button">نمایش همه</button></a>
     </form>
 
     <!-- جدول ابزارها -->
@@ -58,6 +112,7 @@
             <th>محل نگهداری</th>
             <th>وضعیت</th>
             <th>گزارش</th>
+            <th>ویرایش</th>
             <th>حذف</th>
         </tr>
         {% for item in items %}
@@ -71,12 +126,13 @@
             <td>{{ item[6] }}</td>
             <td>
                 {% if item[7] %}
-                    <a href="{{ item[7] }}" target="_blank">📄 مشاهده</a>
+                    <a href="{{ item[7] }}" target="_blank">📄 مشاهده گزارش</a>
                 {% else %}
                     -
                 {% endif %}
             </td>
-            <td><a href="/delete/{{ item[0] }}"><button class="btn-red">❌</button></a></td>
+            <td><a href="/edit/{{ item[0] }}"><button>ویرایش</button></a></td>
+            <td><a href="/delete/{{ item[0] }}"><button>❌</button></a></td>
         </tr>
         {% endfor %}
     </table>
