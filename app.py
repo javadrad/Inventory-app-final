@@ -64,5 +64,51 @@ def index():
     conn.close()
     return render_template("index.html", items=items)
 
+@app.route("/edit/<int:item_id>", methods=["GET", "POST"])
+def edit(item_id):
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+
+    if request.method == "POST":
+        tool_type = request.form["tool_type"]
+        serial_number = request.form["serial_number"]
+        size = request.form["size"]
+        thread_type = request.form["thread_type"]
+        location = request.form["location"]
+        status = request.form["status"]
+
+        report_file = request.files.get("report_file")
+        report_link = request.form.get("report_link", "")
+
+        if report_file and report_file.filename.endswith(".pdf"):
+            filename = secure_filename(report_file.filename)
+            report_path = os.path.join(UPLOAD_FOLDER, filename)
+            report_file.save(report_path)
+            report_link = f"/static/reports/{filename}"
+
+        cursor.execute("""
+            UPDATE inventory SET tool_type=?, serial_number=?, size=?, thread_type=?, location=?, status=?, report_link=?
+            WHERE id=?""",
+                       (tool_type, serial_number, size, thread_type, location, status, report_link, item_id))
+        conn.commit()
+        conn.close()
+        flash("ویرایش موفق بود.", "success")
+        return redirect(url_for("index"))
+
+    cursor.execute("SELECT * FROM inventory WHERE id=?", (item_id,))
+    item = cursor.fetchone()
+    conn.close()
+    return render_template("edit.html", item=item)
+
+@app.route("/delete/<int:item_id>")
+def delete(item_id):
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM inventory WHERE id=?", (item_id,))
+    conn.commit()
+    conn.close()
+    flash("حذف انجام شد.", "success")
+    return redirect(url_for("index"))
+
 if __name__ == "__main__":
     app.run(debug=True)
