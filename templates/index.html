@@ -3,13 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <title>مدیریت ابزار در گردش</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        body {
+            font-family: "B Nazanin", Arial, sans-serif;
+            direction: rtl;
+            margin: 20px;
+        }
+        h1 { text-align: center; font-weight: bold; }
+        form {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 12px;
+        }
+        input, select, button {
+            margin: 5px;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #aaa;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 2px 2px 5px #999;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            border: 1px solid #666;
+            padding: 10px;
+            text-align: center;
+            font-size: 14px;
+        }
+        th { background: #eee; }
+        a { color: blue; text-decoration: none; }
+    </style>
 </head>
 <body>
-    <h1>📊 مدیریت ابزار در گردش</h1>
+    <h1>مدیریت ابزار در گردش</h1>
+
+    <!-- فرم آپلود فایل اکسل -->
+    <form method="POST" action="/upload_excel" enctype="multipart/form-data" style="margin-bottom:20px;">
+        <input type="file" name="excel_file" accept=".xlsx,.xls" required>
+        <button type="submit">📁 بارگذاری اکسل</button>
+    </form>
 
     <!-- فرم ثبت ابزار -->
-    <form method="POST" action="/add" enctype="multipart/form-data" class="form-box">
+    <form method="POST" action="/add" enctype="multipart/form-data">
         <input type="text" name="tool_type" placeholder="نوع ابزار" required>
         <input type="text" name="serial_number" placeholder="شماره سریال" required>
         <input type="text" name="size" placeholder="سایز">
@@ -25,15 +70,8 @@
         <button type="submit">➕ ثبت ابزار</button>
     </form>
 
-    <!-- فرم آپلود فایل اکسل -->
-    <form method="POST" action="/upload_excel" enctype="multipart/form-data" class="form-box">
-        <label>📁 بارگذاری فایل اکسل</label>
-        <input type="file" name="excel_file" accept=".xlsx, .xls" required>
-        <button type="submit">بارگذاری</button>
-    </form>
-
     <!-- فرم جستجو -->
-    <form method="get" action="/" class="form-box">
+    <form method="get" action="/">
         <input type="text" name="tool_type" value="{{ tool_type }}" placeholder="نوع ابزار">
         <input type="text" name="serial_number" value="{{ serial_number }}" placeholder="شماره سریال">
         <input type="text" name="size" value="{{ size }}" placeholder="سایز">
@@ -70,13 +108,9 @@
                 {% else %}
                     -
                 {% endif %}
-                <form method="POST" action="/upload_report/{{ item[0] }}" enctype="multipart/form-data">
-                    <input type="file" name="report_file" accept="application/pdf">
-                    <button type="submit">📤 آپلود گزارش</button>
-                </form>
             </td>
-            <td><a href="/edit/{{ item[0] }}"><button>✏️ ویرایش</button></a></td>
-            <td><a href="/delete/{{ item[0] }}"><button>❌ حذف</button></a></td>
+            <td><a href="/edit/{{ item[0] }}"><button>ویرایش</button></a></td>
+            <td><a href="/delete/{{ item[0] }}"><button>❌</button></a></td>
         </tr>
         {% endfor %}
     </table>
