@@ -1,20 +1,18 @@
-from flask import Flask, render_template, request, redirect, url_for, send_from_directory, flash
+from flask import Flask, render_template, request, redirect, url_for, flash
 import sqlite3
 import os
 import pandas as pd
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
-app.secret_key = "secret-key-tool-manager"
+app.secret_key = "secret_key"
 
-# مسیر پوشه آپلود گزارش‌ها
 UPLOAD_FOLDER = os.path.join("static", "reports")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 DATABASE = "inventory.db"
 
-# ایجاد دیتابیس اگر وجود نداشته باشد
 def init_db():
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
@@ -38,37 +36,23 @@ init_db()
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "POST":
-        # بارگذاری فایل اکسل
         excel_file = request.files.get("excel_file")
         if excel_file and excel_file.filename.endswith((".xlsx", ".xls")):
-            filename = secure_filename(excel_file.filename)
-            file_path = os.path.join("static", filename)
-            excel_file.save(file_path)
-
-            try:
-                df = pd.read_excel(file_path, engine="openpyxl")
-                required_cols = ["id", "tool_type", "serial_number", "size", "thread_type", "location", "status", "report_link"]
-                if list(df.columns) != required_cols:
-                    flash("ساختار فایل اکسل نادرست است!", "error")
-                    return redirect(url_for("index"))
-
-                conn = sqlite3.connect(DATABASE)
-                cursor = conn.cursor()
-                for _, row in df.iterrows():
-                    cursor.execute("""
-                        INSERT OR REPLACE INTO inventory
-                        (id, tool_type, serial_number, size, thread_type, location, status, report_link)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                    """, tuple(row))
-                conn.commit()
-                conn.close()
-                flash("بارگذاری و بروزرسانی دیتابیس با موفقیت انجام شد ✅", "success")
-            except Exception as e:
-                flash(f"خطا در خواندن فایل اکسل: {e}", "error")
-            os.remove(file_path)
+            df = pd.read_excel(excel_file)
+            conn = sqlite3.connect(DATABASE)
+            cursor = conn.cursor()
+            for _, row in df.iterrows():
+                cursor.execute("""
+                    INSERT INTO inventory (tool_type, serial_number, size, thread_type, location, status, report_link)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                               (row[1], row[2], row[3], row[4], row[5], row[6], row[7]))
+            conn.commit()
+            conn.close()
+            flash("بارگذاری Excel با موفقیت انجام شد.", "success")
+        else:
+            flash("لطفاً یک فایل Excel معتبر انتخاب کنید.", "error")
         return redirect(url_for("index"))
 
-    # نمایش ابزارها و جستجو
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
 
@@ -78,7 +62,6 @@ def index():
 
     query = "SELECT * FROM inventory WHERE 1=1"
     params = []
-
     if tool_type:
         query += " AND tool_type LIKE ?"
         params.append(f"%{tool_type}%")
@@ -120,8 +103,7 @@ def add():
                    (tool_type, serial_number, size, thread_type, location, status, report_link))
     conn.commit()
     conn.close()
-
-    flash("ابزار با موفقیت اضافه شد ✅", "success")
+    flash("ابزار با موفقیت ثبت شد.", "success")
     return redirect(url_for("index"))
 
 @app.route("/edit/<int:item_id>", methods=["GET", "POST"])
@@ -152,7 +134,7 @@ def edit(item_id):
                        (tool_type, serial_number, size, thread_type, location, status, report_link, item_id))
         conn.commit()
         conn.close()
-        flash("ویرایش ابزار با موفقیت انجام شد ✅", "success")
+        flash("ویرایش با موفقیت انجام شد.", "success")
         return redirect(url_for("index"))
 
     cursor.execute("SELECT * FROM inventory WHERE id=?", (item_id,))
@@ -167,8 +149,8 @@ def delete(item_id):
     cursor.execute("DELETE FROM inventory WHERE id=?", (item_id,))
     conn.commit()
     conn.close()
-    flash("ابزار حذف شد ❌", "success")
+    flash("حذف با موفقیت انجام شد.", "success")
     return redirect(url_for("index"))
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=True)
+    app.run(debug=True)
