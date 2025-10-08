@@ -1,10 +1,14 @@
 {
   "name": "مدیریت ابزار در گردش",
-  "short_name": "ابزار",
+  "short_name": "Tool Manager",
+  "lang": "fa",
+  "dir": "rtl",
+  "description": "اپلیکیشن مدیریت ابزار در گردش با قابلیت بارگذاری Excel و گزارش PDF",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#4CAF50",
-  "theme_color": "#4CAF50",
+  "background_color": "#ffffff",
+  "theme_color": "#0b3954",
+  "orientation": "portrait",
   "icons": [
     {
       "src": "/static/icons/icon-192.png",
@@ -16,5 +20,5 @@
       "sizes": "512x512",
       "type": "image/png"
     }
-]
-
+  ]
+}
