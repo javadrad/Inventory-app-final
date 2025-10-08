@@ -8,25 +8,38 @@
 <body>
     <h1>مدیریت ابزار در گردش</h1>
 
-    <!-- بارگذاری اکسل -->
-    <form method="POST" enctype="multipart/form-data">
-        <input type="file" name="excel_file" accept=".xlsx,.xls" required>
+    <form method="POST" action="/add" enctype="multipart/form-data">
+        <input type="text" name="tool_type" placeholder="نوع ابزار" required>
+        <input type="text" name="serial_number" placeholder="شماره سریال" required>
+        <input type="text" name="size" placeholder="سایز">
+        <input type="text" name="thread_type" placeholder="نوع رزوه">
+        <input type="text" name="location" placeholder="محل نگهداری">
+        <select name="status">
+            <option value="آماده">✅ آماده استفاده</option>
+            <option value="تعمیر">🛠 نیاز به تعمیر</option>
+            <option value="سندبلاست">🌀 نیاز به سندبلاست</option>
+            <option value="خراب">❌ خراب</option>
+        </select>
+        گزارش (PDF): <input type="file" name="report_file">
+        <button type="submit">➕ ثبت ابزار</button>
+    </form>
+
+    <!-- فرم بارگذاری اکسل -->
+    <form method="POST" action="/upload_excel" enctype="multipart/form-data" style="margin-top:10px;">
+        <input type="file" name="excel_file" accept=".xlsx" required>
         <button type="submit">📁 بارگذاری اکسل</button>
     </form>
 
-    <!-- جدول ابزارها -->
     <table>
         <tr>
             <th>شناسه</th>
             <th>نوع ابزار</th>
-            <th>شماره سریال</th>
+            <th>سریال</th>
             <th>سایز</th>
-            <th>نوع رزوه</th>
-            <th>محل نگهداری</th>
+            <th>رزوه</th>
+            <th>محل</th>
             <th>وضعیت</th>
             <th>گزارش</th>
-            <th>ویرایش</th>
-            <th>حذف</th>
         </tr>
         {% for item in items %}
         <tr>
@@ -37,9 +50,13 @@
             <td>{{ item[4] }}</td>
             <td>{{ item[5] }}</td>
             <td>{{ item[6] }}</td>
-            <td>{% if item[7] %}<a href="{{ item[7] }}" target="_blank">📄 مشاهده گزارش</a>{% else %}-{% endif %}</td>
-            <td><a href="/edit/{{ item[0] }}"><button>ویرایش</button></a></td>
-            <td><a href="/delete/{{ item[0] }}"><button>❌</button></a></td>
+            <td>
+                {% if item[7] %}
+                    <a href="{{ item[7] }}" target="_blank">📄 مشاهده</a>
+                {% else %}
+                    -
+                {% endif %}
+            </td>
         </tr>
         {% endfor %}
     </table>
