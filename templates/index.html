@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="fa">
 <head>
@@ -7,9 +6,35 @@
 </head>
 <body>
     <h1>مدیریت ابزار در گردش</h1>
-    <form method="POST" action="/" enctype="multipart/form-data">
+
+    <form method="POST" enctype="multipart/form-data">
         <input type="file" name="excel_file" accept=".xlsx,.xls">
         <button type="submit">📁 بارگذاری اکسل</button>
     </form>
+
+    <table border="1" style="margin-top:20px;">
+        <tr>
+            <th>شناسه</th>
+            <th>نوع ابزار</th>
+            <th>شماره سریال</th>
+            <th>سایز</th>
+            <th>رزوه</th>
+            <th>محل</th>
+            <th>وضعیت</th>
+            <th>گزارش</th>
+        </tr>
+        {% for item in items %}
+        <tr>
+            <td>{{ item[0] }}</td>
+            <td>{{ item[1] }}</td>
+            <td>{{ item[2] }}</td>
+            <td>{{ item[3] }}</td>
+            <td>{{ item[4] }}</td>
+            <td>{{ item[5] }}</td>
+            <td>{{ item[6] }}</td>
+            <td>{{ item[7] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
 </body>
 </html>
