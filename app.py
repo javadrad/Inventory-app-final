@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 import sqlite3
 import os
-import pandas as pd
+import openpyxl
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
@@ -38,10 +38,13 @@ def index():
     if request.method == "POST":
         excel_file = request.files.get("excel_file")
         if excel_file and excel_file.filename.endswith((".xlsx", ".xls")):
-            df = pd.read_excel(excel_file)
+            wb = openpyxl.load_workbook(excel_file)
+            sheet = wb.active
             conn = sqlite3.connect(DATABASE)
             cursor = conn.cursor()
-            for _, row in df.iterrows():
+            for i, row in enumerate(sheet.iter_rows(values_only=True)):
+                if i == 0:
+                    continue  # رد کردن سطر هدر
                 cursor.execute("""
                     INSERT INTO inventory (tool_type, serial_number, size, thread_type, location, status, report_link)
                     VALUES (?, ?, ?, ?, ?, ?, ?)""",
