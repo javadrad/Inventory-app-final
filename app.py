@@ -2,15 +2,15 @@ from flask import Flask, render_template, request, redirect, url_for
 import sqlite3
 import os
 from werkzeug.utils import secure_filename
-from openpyxl import load_workbook
 
 app = Flask(__name__)
 
-UPLOAD_FOLDER = os.path.join("static", "reports")
+# مسیر ذخیره پایدار دیتابیس و فایل‌ها
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATABASE = os.path.join(BASE_DIR, "inventory.db")
+UPLOAD_FOLDER = os.path.join(BASE_DIR, "static", "reports")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-
-DATABASE = "inventory.db"
 
 def init_db():
     conn = sqlite3.connect(DATABASE)
@@ -34,12 +34,12 @@ init_db()
 
 @app.route("/", methods=["GET"])
 def index():
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+
     tool_type = request.args.get("tool_type", "")
     serial_number = request.args.get("serial_number", "")
     size = request.args.get("size", "")
-
-    conn = sqlite3.connect(DATABASE)
-    cursor = conn.cursor()
 
     query = "SELECT * FROM inventory WHERE 1=1"
     params = []
@@ -57,6 +57,7 @@ def index():
     cursor.execute(query, params)
     items = cursor.fetchall()
     conn.close()
+
     return render_template("index.html", items=items, tool_type=tool_type, serial_number=serial_number, size=size)
 
 @app.route("/add", methods=["POST"])
@@ -87,56 +88,6 @@ def add():
 
     return redirect(url_for("index"))
 
-@app.route("/upload_excel", methods=["POST"])
-def upload_excel():
-    try:
-        file = request.files["excel_file"]
-        if file and file.filename.endswith((".xlsx", ".xls")):
-            filename = secure_filename(file.filename)
-            path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-            file.save(path)
-
-            wb = load_workbook(path)
-            ws = wb.active
-
-            conn = sqlite3.connect(DATABASE)
-            cursor = conn.cursor()
-
-            for row_idx, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
-                if len(row) != 6:
-                    return f"خطا در سطر {row_idx}: تعداد ستون‌ها باید 6 باشد، اما {len(row)} یافت شد."
-                row = tuple("" if v is None else v for v in row)
-                cursor.execute("""
-                    INSERT INTO inventory (tool_type, serial_number, size, thread_type, location, status, report_link)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)""",
-                               (*row, ""))
-            conn.commit()
-            conn.close()
-            wb.close()
-            return redirect(url_for("index"))
-
-        return "فایل اکسل معتبر نیست!"
-
-    except Exception as e:
-        return f"خطا در پردازش اکسل: {str(e)}"
-
-@app.route("/upload_report/<int:item_id>", methods=["POST"])
-def upload_report(item_id):
-    report_file = request.files.get("report_file")
-    if report_file and report_file.filename.endswith(".pdf"):
-        filename = secure_filename(report_file.filename)
-        path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-        report_file.save(path)
-        report_link = f"/static/reports/{filename}"
-
-        conn = sqlite3.connect(DATABASE)
-        cursor = conn.cursor()
-        cursor.execute("UPDATE inventory SET report_link=? WHERE id=?", (report_link, item_id))
-        conn.commit()
-        conn.close()
-
-    return redirect(url_for("index"))
-
 @app.route("/edit/<int:item_id>", methods=["GET", "POST"])
 def edit(item_id):
     conn = sqlite3.connect(DATABASE)
@@ -150,8 +101,8 @@ def edit(item_id):
         location = request.form["location"]
         status = request.form["status"]
 
-        report_link = request.form.get("report_link", "")
         report_file = request.files.get("report_file")
+        report_link = request.form.get("report_link", "")
 
         if report_file and report_file.filename.endswith(".pdf"):
             filename = secure_filename(report_file.filename)
@@ -160,11 +111,9 @@ def edit(item_id):
             report_link = f"/static/reports/{filename}"
 
         cursor.execute("""
-            UPDATE inventory
-            SET tool_type=?, serial_number=?, size=?, thread_type=?, location=?, status=?, report_link=?
+            UPDATE inventory SET tool_type=?, serial_number=?, size=?, thread_type=?, location=?, status=?, report_link=?
             WHERE id=?""",
                        (tool_type, serial_number, size, thread_type, location, status, report_link, item_id))
-
         conn.commit()
         conn.close()
         return redirect(url_for("index"))
@@ -184,4 +133,4 @@ def delete(item_id):
     return redirect(url_for("index"))
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
