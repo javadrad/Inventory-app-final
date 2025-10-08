@@ -1,6 +1,6 @@
 {
-  "name": "مدیریت ابزار",
-  "short_name": "ابزار",
+  "name": "مدیریت ابزار در گردش",
+  "short_name": "InventoryApp",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
