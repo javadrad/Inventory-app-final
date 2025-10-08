@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for
 import sqlite3
 import os
 from werkzeug.utils import secure_filename
+import openpyxl
 
 app = Flask(__name__)
 
@@ -130,6 +131,36 @@ def delete(item_id):
     conn.commit()
     conn.close()
     return redirect(url_for("index"))
+
+@app.route("/upload_excel", methods=["POST"])
+def upload_excel():
+    excel_file = request.files.get("excel_file")
+    if not excel_file:
+        return "هیچ فایلی انتخاب نشده", 400
+
+    try:
+        wb = openpyxl.load_workbook(excel_file)
+        sheet = wb.active
+
+        conn = sqlite3.connect(DATABASE)
+        cursor = conn.cursor()
+
+        for row in sheet.iter_rows(min_row=2, values_only=True):
+            if len(row) != 7:
+                return f"خطا: تعداد ستون‌ها باید 7 باشد، اما {len(row)} یافت شد.", 400
+
+            tool_type, serial_number, size, thread_type, location, status, report_link = row
+            cursor.execute("""
+                INSERT INTO inventory (tool_type, serial_number, size, thread_type, location, status, report_link)
+                VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                           (tool_type, serial_number, size, thread_type, location, status, report_link))
+
+        conn.commit()
+        conn.close()
+        return redirect(url_for("index"))
+
+    except Exception as e:
+        return f"خطا در پردازش فایل اکسل: {e}", 500
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
