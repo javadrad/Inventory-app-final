@@ -3,25 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <title>مدیریت ابزار در گردش</title>
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
     <h1>مدیریت ابزار در گردش</h1>
 
+    <!-- بارگذاری اکسل -->
     <form method="POST" enctype="multipart/form-data">
-        <input type="file" name="excel_file" accept=".xlsx,.xls">
+        <input type="file" name="excel_file" accept=".xlsx,.xls" required>
         <button type="submit">📁 بارگذاری اکسل</button>
     </form>
 
-    <table border="1" style="margin-top:20px;">
+    <!-- جدول ابزارها -->
+    <table>
         <tr>
             <th>شناسه</th>
             <th>نوع ابزار</th>
             <th>شماره سریال</th>
             <th>سایز</th>
-            <th>رزوه</th>
-            <th>محل</th>
+            <th>نوع رزوه</th>
+            <th>محل نگهداری</th>
             <th>وضعیت</th>
             <th>گزارش</th>
+            <th>ویرایش</th>
+            <th>حذف</th>
         </tr>
         {% for item in items %}
         <tr>
@@ -32,7 +37,9 @@
             <td>{{ item[4] }}</td>
             <td>{{ item[5] }}</td>
             <td>{{ item[6] }}</td>
-            <td>{{ item[7] }}</td>
+            <td>{% if item[7] %}<a href="{{ item[7] }}" target="_blank">📄 مشاهده گزارش</a>{% else %}-{% endif %}</td>
+            <td><a href="/edit/{{ item[0] }}"><button>ویرایش</button></a></td>
+            <td><a href="/delete/{{ item[0] }}"><button>❌</button></a></td>
         </tr>
         {% endfor %}
     </table>
