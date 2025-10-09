@@ -18,7 +18,7 @@
             {% endif %}
         {% endwith %}
 
-        <!-- ثبت ابزار -->
+        <!-- ================= ثبت ابزار ================= -->
         <form method="POST" action="/add" enctype="multipart/form-data" class="card">
             <h3>➕ ثبت ابزار جدید</h3>
             <div class="row">
@@ -42,6 +42,7 @@
                         <option value="Fishing">Fishing</option>
                     </select>
                 </div>
+
                 <input type="text" name="serial_number" placeholder="شماره سریال" required>
                 <input type="text" name="size" placeholder="سایز">
                 <input type="text" name="thread_type" placeholder="نوع رزوه">
@@ -54,18 +55,28 @@
                     <option value="نیاز به بازرسی">🔍 نیاز به بازرسی</option>
                     <option value="Class 2">📘 Class 2</option>
                 </select>
+
                 <label>گزارش (PDF): <input type="file" name="report_file" accept=".pdf"></label>
             </div>
+
             <div class="actions">
                 <button type="submit">ثبت ابزار</button>
-                <form method="POST" action="/upload_excel" enctype="multipart/form-data" class="inline-form">
-                    <input type="file" name="excel_file" accept=".xlsx,.xls" required>
-                    <button type="submit">📁 بارگذاری اکسل</button>
-                </form>
             </div>
         </form>
 
-        <!-- جستجو -->
+        <!-- ================= آپلود اکسل (جدا از فرم ثبت) ================= -->
+        <form method="POST" action="/upload_excel" enctype="multipart/form-data" class="card">
+            <h3>📁 بارگذاری فایل اکسل</h3>
+            <div class="row">
+                <input type="file" name="excel_file" accept=".xlsx,.xls" required>
+                <button type="submit">بارگذاری و وارد کردن به جدول</button>
+            </div>
+            <p style="font-size:13px;color:#666;margin-top:8px;">
+                فرمت ستون‌ها (به همین ترتیب): <strong>tool_type, serial_number, size, thread_type, location, status, report_link (اختیاری)</strong>
+            </p>
+        </form>
+
+        <!-- ================= جستجو ================= -->
         <form method="get" action="/" class="card">
             <h3>🔍 جستجو</h3>
             <div class="row">
@@ -105,7 +116,7 @@
             </div>
         </form>
 
-        <!-- جدول -->
+        <!-- ================= جدول ================= -->
         <div class="card">
             <h3>📋 لیست ابزارها</h3>
             <table class="compact">
