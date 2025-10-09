@@ -3,68 +3,115 @@
 <head>
     <meta charset="UTF-8">
     <title>ویرایش ابزار</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        body {
+            font-family: Vazirmatn, sans-serif;
+            background: linear-gradient(to bottom right, #e6eef9, #ffffff);
+            margin: 0;
+            padding: 40px;
+            direction: rtl;
+        }
+        h2 {
+            text-align: center;
+            color: #003366;
+            margin-bottom: 30px;
+        }
+        form {
+            background: #fff;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.15);
+            max-width: 600px;
+            margin: auto;
+        }
+        label {
+            display: block;
+            margin-top: 15px;
+            color: #333;
+            font-weight: bold;
+        }
+        input[type="text"], select, textarea {
+            width: 100%;
+            padding: 8px 10px;
+            margin-top: 5px;
+            border: 1px solid #aaa;
+            border-radius: 10px;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+        input[type="file"] {
+            margin-top: 5px;
+        }
+        textarea {
+            resize: vertical;
+            height: 90px;
+        }
+        .btn {
+            background: linear-gradient(to bottom, #007bff, #0056b3);
+            color: #fff;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.2s ease;
+        }
+        .btn:hover {
+            background: linear-gradient(to bottom, #0056b3, #003d80);
+        }
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 15px;
+            color: #0056b3;
+            text-decoration: none;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
-    <h1>ویرایش ابزار</h1>
-    <div class="container">
-        <form method="POST" enctype="multipart/form-data" class="card">
-            <div class="tool-type-container">
-                <input type="text" name="tool_type" value="{{ item[1] }}" required>
-                <select name="tool_type_select" onchange="document.querySelector('[name=tool_type]').value=this.value;">
-                    <option value="">انتخاب نوع ابزار</option>
-                    <option value="Drill Pipe" {% if item[1]=='Drill Pipe' %}selected{% endif %}>Drill Pipe</option>
-                    <option value="HW" {% if item[1]=='HW' %}selected{% endif %}>HW</option>
-                    <option value="Drill Collar" {% if item[1]=='Drill Collar' %}selected{% endif %}>Drill Collar</option>
-                    <option value="Cross Over" {% if item[1]=='Cross Over' %}selected{% endif %}>Cross Over</option>
-                    <option value="Bit Sub" {% if item[1]=='Bit Sub' %}selected{% endif %}>Bit Sub</option>
-                    <option value="Short Sub" {% if item[1]=='Short Sub' %}selected{% endif %}>Short Sub</option>
-                    <option value="Casing Scrapper" {% if item[1]=='Casing Scrapper' %}selected{% endif %}>Casing Scrapper</option>
-                    <option value="Uper I-BOP" {% if item[1]=='Uper I-BOP' %}selected{% endif %}>Uper I-BOP</option>
-                    <option value="Lower I-BOP" {% if item[1]=='Lower I-BOP' %}selected{% endif %}>Lower I-BOP</option>
-                    <option value="Double Box" {% if item[1]=='Double Box' %}selected{% endif %}>Double Box</option>
-                    <option value="Saver Sub" {% if item[1]=='Saver Sub' %}selected{% endif %}>Saver Sub</option>
-                    <option value="Safty Valve" {% if item[1]=='Safty Valve' %}selected{% endif %}>Safty Valve</option>
-                    <option value="PUP Joint" {% if item[1]=='PUP Joint' %}selected{% endif %}>PUP Joint</option>
-                    <option value="Fishing" {% if item[1]=='Fishing' %}selected{% endif %}>Fishing</option>
-                </select>
-            </div>
 
-            <label>شماره سریال:</label>
-            <input type="text" name="serial_number" value="{{ item[2] }}" required>
+    <h2>✏️ ویرایش اطلاعات ابزار</h2>
 
-            <label>سایز:</label>
-            <input type="text" name="size" value="{{ item[3] }}">
+    <form method="POST" enctype="multipart/form-data">
+        <label>نوع ابزار:</label>
+        <input type="text" name="tool_type" value="{{ item[1] }}" required>
 
-            <label>نوع رزوه:</label>
-            <input type="text" name="thread_type" value="{{ item[4] }}">
+        <label>شماره سریال:</label>
+        <input type="text" name="serial_number" value="{{ item[2] }}" required>
 
-            <label>محل نگهداری:</label>
-            <input type="text" name="location" value="{{ item[5] }}">
+        <label>سایز:</label>
+        <input type="text" name="size" value="{{ item[3] }}">
 
-            <label>وضعیت:</label>
-            <select name="status">
-                <option value="آماده" {% if item[6]=='آماده' %}selected{% endif %}>✅ آماده استفاده</option>
-                <option value="تعمیر" {% if item[6]=='تعمیر' %}selected{% endif %}>🛠 نیاز به تعمیر</option>
-                <option value="سندبلاست" {% if item[6]=='سندبلاست' %}selected{% endif %}>🌀 نیاز به سندبلاست</option>
-                <option value="خراب" {% if item[6]=='خراب' %}selected{% endif %}>❌ خراب</option>
-                <option value="نیاز به بازرسی" {% if item[6]=='نیاز به بازرسی' %}selected{% endif %}>🔍 نیاز به بازرسی</option>
-                <option value="Class 2" {% if item[6]=='Class 2' %}selected{% endif %}>📘 Class 2</option>
-            </select>
+        <label>نوع رزوه:</label>
+        <input type="text" name="thread_type" value="{{ item[4] }}">
 
-            <label>گزارش (PDF):</label>
-            {% if item[7] %}
-                <a href="{{ item[7] }}" target="_blank">مشاهده گزارش فعلی</a>
-            {% endif %}
-            <input type="file" name="report_file" accept=".pdf">
+        <label>محل نگهداری:</label>
+        <input type="text" name="location" value="{{ item[5] }}">
 
-            <input type="hidden" name="report_link" value="{{ item[7] }}">
+        <label>وضعیت:</label>
+        <select name="status">
+            <option value="در حال استفاده" {% if item[6] == "در حال استفاده" %}selected{% endif %}>در حال استفاده</option>
+            <option value="در انبار" {% if item[6] == "در انبار" %}selected{% endif %}>در انبار</option>
+            <option value="مرجوع شده" {% if item[6] == "مرجوع شده" %}selected{% endif %}>مرجوع شده</option>
+            <option value="خراب / از رده خارج" {% if item[6] == "خراب / از رده خارج" %}selected{% endif %}>خراب / از رده خارج</option>
+        </select>
 
-            <div class="actions">
-                <button type="submit">ثبت تغییرات</button>
-                <a href="/"><button type="button">بازگشت</button></a>
-            </div>
-        </form>
-    </div>
+        <label>فایل گزارش بازرسی (PDF):</label>
+        <input type="file" name="report_file" accept=".pdf">
+        {% if item[7] %}
+        <p>📎 <a href="{{ item[7] }}" target="_blank">مشاهده فایل فعلی</a></p>
+        {% endif %}
+
+        <label>توضیحات:</label>
+        <textarea name="notes">{{ item[8] }}</textarea>
+
+        <button type="submit" class="btn">💾 ذخیره تغییرات</button>
+    </form>
+
+    <a href="{{ url_for('index') }}" class="back-link">⬅ بازگشت به صفحه اصلی</a>
+
 </body>
 </html>
