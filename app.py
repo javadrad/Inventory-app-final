@@ -1,22 +1,49 @@
-from flask import Flask, render_template, request, redirect, url_for
-import sqlite3
 import os
+import sqlite3
+from flask import Flask, render_template, request, redirect, url_for, send_from_directory, flash
 from werkzeug.utils import secure_filename
 import openpyxl
 
+# ------------------ تنظیمات اولیه ------------------
 app = Flask(__name__)
+app.secret_key = "supersecretkey"
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATABASE = os.path.join(BASE_DIR, "inventory.db")
-UPLOAD_FOLDER = os.path.join(BASE_DIR, "static", "reports")
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+# مسیر اصلی پروژه
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+
+# مسیر پوشه دیتابیس
+DATA_DIR = os.path.join(BASE_DIR, "data")
+if not os.path.exists(DATA_DIR):
+    os.makedirs(DATA_DIR)
+
+# مسیر فایل دیتابیس
+DB_PATH = os.path.join(DATA_DIR, "inventory.db")
+
+# مسیر پوشه ذخیره گزارش‌ها
+REPORT_DIR = os.path.join(BASE_DIR, "static", "reports")
+if not os.path.exists(REPORT_DIR):
+    os.makedirs(REPORT_DIR)
+
+# مسیر پوشه آپلود اکسل
+UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+ALLOWED_EXTENSIONS = {"xlsx"}
+
+
+# ------------------ توابع دیتابیس ------------------
+def get_db_connection():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
+
 
 def init_db():
-    conn = sqlite3.connect(DATABASE)
-    cursor = conn.cursor()
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS inventory (
+    conn = get_db_connection()
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS inventory_data (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             tool_type TEXT,
             serial_number TEXT,
@@ -30,18 +57,19 @@ def init_db():
     conn.commit()
     conn.close()
 
+
 init_db()
 
+
+# ------------------ مسیر اصلی ------------------
 @app.route("/", methods=["GET"])
 def index():
-    conn = sqlite3.connect(DATABASE)
-    cursor = conn.cursor()
-
     tool_type = request.args.get("tool_type", "")
     serial_number = request.args.get("serial_number", "")
     size = request.args.get("size", "")
 
-    query = "SELECT * FROM inventory WHERE 1=1"
+    conn = get_db_connection()
+    query = "SELECT * FROM inventory_data WHERE 1=1"
     params = []
 
     if tool_type:
@@ -54,14 +82,15 @@ def index():
         query += " AND size LIKE ?"
         params.append(f"%{size}%")
 
-    cursor.execute(query, params)
-    items = cursor.fetchall()
+    items = conn.execute(query, params).fetchall()
     conn.close()
 
     return render_template("index.html", items=items, tool_type=tool_type, serial_number=serial_number, size=size)
 
+
+# ------------------ افزودن ابزار ------------------
 @app.route("/add", methods=["POST"])
-def add():
+def add_tool():
     tool_type = request.form["tool_type"]
     serial_number = request.form["serial_number"]
     size = request.form["size"]
@@ -71,27 +100,40 @@ def add():
 
     report_file = request.files.get("report_file")
     report_link = ""
-    if report_file and report_file.filename.endswith(".pdf"):
+
+    if report_file and report_file.filename:
         filename = secure_filename(report_file.filename)
-        report_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-        report_file.save(report_path)
+        save_path = os.path.join(REPORT_DIR, filename)
+        report_file.save(save_path)
         report_link = f"/static/reports/{filename}"
 
-    conn = sqlite3.connect(DATABASE)
-    cursor = conn.cursor()
-    cursor.execute("""
-        INSERT INTO inventory (tool_type, serial_number, size, thread_type, location, status, report_link)
-        VALUES (?, ?, ?, ?, ?, ?, ?)""",
-                   (tool_type, serial_number, size, thread_type, location, status, report_link))
+    conn = get_db_connection()
+    conn.execute("""
+        INSERT INTO inventory_data (tool_type, serial_number, size, thread_type, location, status, report_link)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    """, (tool_type, serial_number, size, thread_type, location, status, report_link))
     conn.commit()
     conn.close()
 
+    flash("✅ ابزار جدید با موفقیت اضافه شد", "success")
     return redirect(url_for("index"))
 
+
+# ------------------ حذف ابزار ------------------
+@app.route("/delete/<int:item_id>")
+def delete_item(item_id):
+    conn = get_db_connection()
+    conn.execute("DELETE FROM inventory_data WHERE id = ?", (item_id,))
+    conn.commit()
+    conn.close()
+    flash("🗑 ابزار حذف شد", "info")
+    return redirect(url_for("index"))
+
+
+# ------------------ ویرایش ابزار ------------------
 @app.route("/edit/<int:item_id>", methods=["GET", "POST"])
-def edit(item_id):
-    conn = sqlite3.connect(DATABASE)
-    cursor = conn.cursor()
+def edit_item(item_id):
+    conn = get_db_connection()
 
     if request.method == "POST":
         tool_type = request.form["tool_type"]
@@ -102,65 +144,64 @@ def edit(item_id):
         status = request.form["status"]
 
         report_file = request.files.get("report_file")
-        report_link = request.form.get("report_link", "")
+        report_link = request.form.get("report_link")
 
-        if report_file and report_file.filename.endswith(".pdf"):
+        if report_file and report_file.filename:
             filename = secure_filename(report_file.filename)
-            report_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-            report_file.save(report_path)
+            save_path = os.path.join(REPORT_DIR, filename)
+            report_file.save(save_path)
             report_link = f"/static/reports/{filename}"
 
-        cursor.execute("""
-            UPDATE inventory SET tool_type=?, serial_number=?, size=?, thread_type=?, location=?, status=?, report_link=?
-            WHERE id=?""",
-                       (tool_type, serial_number, size, thread_type, location, status, report_link, item_id))
+        conn.execute("""
+            UPDATE inventory_data
+            SET tool_type=?, serial_number=?, size=?, thread_type=?, location=?, status=?, report_link=?
+            WHERE id=?
+        """, (tool_type, serial_number, size, thread_type, location, status, report_link, item_id))
         conn.commit()
         conn.close()
+        flash("✏️ اطلاعات ابزار بروزرسانی شد", "success")
         return redirect(url_for("index"))
 
-    cursor.execute("SELECT * FROM inventory WHERE id=?", (item_id,))
-    item = cursor.fetchone()
+    item = conn.execute("SELECT * FROM inventory_data WHERE id = ?", (item_id,)).fetchone()
     conn.close()
     return render_template("edit.html", item=item)
 
-@app.route("/delete/<int:item_id>")
-def delete(item_id):
-    conn = sqlite3.connect(DATABASE)
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM inventory WHERE id=?", (item_id,))
-    conn.commit()
-    conn.close()
-    return redirect(url_for("index"))
 
+# ------------------ آپلود فایل اکسل ------------------
 @app.route("/upload_excel", methods=["POST"])
 def upload_excel():
-    excel_file = request.files.get("excel_file")
-    if not excel_file:
-        return "هیچ فایلی انتخاب نشده", 400
-
-    try:
-        wb = openpyxl.load_workbook(excel_file)
-        sheet = wb.active
-
-        conn = sqlite3.connect(DATABASE)
-        cursor = conn.cursor()
-
-        for row in sheet.iter_rows(min_row=2, values_only=True):
-            if len(row) != 7:
-                return f"خطا: تعداد ستون‌ها باید 7 باشد، اما {len(row)} یافت شد.", 400
-
-            tool_type, serial_number, size, thread_type, location, status, report_link = row
-            cursor.execute("""
-                INSERT INTO inventory (tool_type, serial_number, size, thread_type, location, status, report_link)
-                VALUES (?, ?, ?, ?, ?, ?, ?)""",
-                           (tool_type, serial_number, size, thread_type, location, status, report_link))
-
-        conn.commit()
-        conn.close()
+    file = request.files.get("excel_file")
+    if not file or not file.filename.endswith(".xlsx"):
+        flash("⚠ لطفاً یک فایل Excel معتبر انتخاب کنید.", "danger")
         return redirect(url_for("index"))
 
-    except Exception as e:
-        return f"خطا در پردازش فایل اکسل: {e}", 500
+    path = os.path.join(app.config["UPLOAD_FOLDER"], secure_filename(file.filename))
+    file.save(path)
 
+    wb = openpyxl.load_workbook(path)
+    sheet = wb.active
+
+    conn = get_db_connection()
+    added = 0
+    for i, row in enumerate(sheet.iter_rows(min_row=2, values_only=True), start=2):
+        try:
+            if len(row) != 7:
+                flash(f"⚠ خطا در سطر {i}: تعداد ستون‌ها باید 7 باشد.", "danger")
+                continue
+            conn.execute("""
+                INSERT INTO inventory_data (id, tool_type, serial_number, size, thread_type, location, status)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, row)
+            added += 1
+        except Exception as e:
+            flash(f"❌ خطا در سطر {i}: {e}", "danger")
+    conn.commit()
+    conn.close()
+
+    flash(f"✅ {added} ردیف با موفقیت از فایل Excel افزوده شد.", "success")
+    return redirect(url_for("index"))
+
+
+# ------------------ اجرای برنامه ------------------
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    app.run(debug=True, host="0.0.0.0", port=5000)
