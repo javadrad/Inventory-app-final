@@ -5,115 +5,186 @@
     <title>مدیریت ابزار در گردش</title>
     <style>
         body {
-            font-family: "B Nazanin", Arial, sans-serif;
+            font-family: Arial, sans-serif;
             direction: rtl;
-            margin: 20px;
+            background-color: #f8fafc;
+            margin: 0;
+            padding: 20px;
         }
-        h1 { text-align: center; font-weight: bold; }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
         form {
-            margin-bottom: 20px;
-            padding: 10px;
-            border: 1px solid #ccc;
+            background: #fff;
+            padding: 20px;
             border-radius: 12px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
         }
-        input, select, button {
-            margin: 5px;
+        input, select {
             padding: 8px;
-            border-radius: 8px;
-            border: 1px solid #aaa;
+            margin: 6px;
+            font-size: 15px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
         }
-        button {
-            background: #4CAF50;
+        input[type="submit"], button {
+            background: #0078d7;
             color: white;
-            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 15px;
             cursor: pointer;
-            box-shadow: 2px 2px 5px #999;
+            font-weight: bold;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+        }
+        input[type="submit"]:hover, button:hover {
+            background: #005fa3;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
         }
         th, td {
-            border: 1px solid #666;
+            border: 1px solid #ccc;
             padding: 10px;
             text-align: center;
-            font-size: 14px;
+            font-size: 16px; /* فونت بزرگ‌تر */
         }
-        th { background: #eee; }
-        a { color: blue; text-decoration: none; }
+        th {
+            background-color: #0078d7;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        .edit-form {
+            display: none;
+            background: #eef6ff;
+            padding: 10px;
+            border-radius: 10px;
+            margin-top: 5px;
+        }
+        .flash {
+            color: green;
+            text-align: center;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
+
     <h1>مدیریت ابزار در گردش</h1>
 
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="flash">
+          {% for message in messages %}
+            {{ message }}
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
     <!-- فرم آپلود فایل اکسل -->
-    <form method="POST" action="/upload_excel" enctype="multipart/form-data" style="margin-bottom:20px;">
-        <input type="file" name="excel_file" accept=".xlsx,.xls" required>
-        <button type="submit">📁 بارگذاری اکسل</button>
+    <form action="/upload_excel" method="post" enctype="multipart/form-data">
+        <label>آپلود فایل اکسل:</label>
+        <input type="file" name="excel_file" accept=".xlsx,.xls">
+        <input type="submit" value="آپلود">
     </form>
 
-    <!-- فرم ثبت ابزار -->
-    <form method="POST" action="/add" enctype="multipart/form-data">
-        <input type="text" name="tool_type" placeholder="نوع ابزار" required>
-        <input type="text" name="serial_number" placeholder="شماره سریال" required>
-        <input type="text" name="size" placeholder="سایز">
-        <input type="text" name="thread_type" placeholder="نوع رزوه">
-        <input type="text" name="location" placeholder="محل نگهداری">
-        <select name="status">
-            <option value="آماده">✅ آماده استفاده</option>
-            <option value="تعمیر">🛠 نیاز به تعمیر</option>
-            <option value="سندبلاست">🌀 نیاز به سندبلاست</option>
-            <option value="خراب">❌ خراب</option>
-            <option value="Class 2">📘 Class 2</option>
+    <!-- فرم افزودن رکورد جدید -->
+    <form action="/add" method="post" enctype="multipart/form-data">
+        <input type="text" name="tool_type" placeholder="Tool Type" required>
+        <input type="text" name="serial_number" placeholder="Serial Number" required>
+        <input type="text" name="size" placeholder="Size" required>
+        <input type="text" name="thread_type" placeholder="Thread Type" required>
+        <input type="text" name="location" placeholder="Location" required>
+        <select name="status" required>
+            <option value="In Use">In Use</option>
+            <option value="Available">Available</option>
+            <option value="Repair">Repair</option>
+            <option value="Scrap">Scrap</option>
+            <option value="Class 2">Class 2</option> <!-- 🔹 گزینه جدید -->
         </select>
-        گزارش (PDF): <input type="file" name="report_file">
-        <button type="submit">➕ ثبت ابزار</button>
+        <input type="file" name="report_link" accept=".pdf">
+        <input type="submit" value="ثبت">
     </form>
 
-    <!-- فرم جستجو -->
-    <form method="get" action="/">
-        <input type="text" name="tool_type" value="{{ tool_type }}" placeholder="نوع ابزار">
-        <input type="text" name="serial_number" value="{{ serial_number }}" placeholder="شماره سریال">
-        <input type="text" name="size" value="{{ size }}" placeholder="سایز">
-        <button type="submit">🔍 جستجو</button>
-        <a href="/"><button type="button">نمایش همه</button></a>
-    </form>
-
-    <!-- جدول ابزارها -->
     <table>
-        <tr>
-            <th>شناسه</th>
-            <th>نوع ابزار</th>
-            <th>شماره سریال</th>
-            <th>سایز</th>
-            <th>نوع رزوه</th>
-            <th>محل نگهداری</th>
-            <th>وضعیت</th>
-            <th>گزارش</th>
-            <th>ویرایش</th>
-            <th>حذف</th>
-        </tr>
-        {% for item in items %}
-        <tr>
-            <td>{{ item[0] }}</td>
-            <td>{{ item[1] }}</td>
-            <td>{{ item[2] }}</td>
-            <td>{{ item[3] }}</td>
-            <td>{{ item[4] }}</td>
-            <td>{{ item[5] }}</td>
-            <td>{{ item[6] }}</td>
-            <td>
-                {% if item[7] %}
-                    <a href="{{ item[7] }}" target="_blank">📄 مشاهده گزارش</a>
-                {% else %}
-                    -
-                {% endif %}
-            </td>
-            <td><a href="/edit/{{ item[0] }}"><button>ویرایش</button></a></td>
-            <td><a href="/delete/{{ item[0] }}"><button>❌</button></a></td>
-        </tr>
-        {% endfor %}
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Tool Type</th>
+                <th>Serial Number</th>
+                <th>Size</th>
+                <th>Thread Type</th>
+                <th>Location</th>
+                <th>Status</th>
+                <th>Report</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in data %}
+            <tr>
+                <td>{{ row[0] }}</td>
+                <td>{{ row[1] }}</td>
+                <td>{{ row[2] }}</td>
+                <td>{{ row[3] }}</td>
+                <td>{{ row[4] }}</td>
+                <td>{{ row[5] }}</td>
+                <td>{{ row[6] }}</td>
+                <td>
+                    {% if row[7] %}
+                        <a href="{{ url_for('serve_report', filename=row[7].split('/')[-1]) }}" target="_blank">مشاهده</a>
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
+                <td>
+                    <button onclick="toggleEditForm({{ row[0] }})">ویرایش</button>
+                    <a href="/delete/{{ row[0] }}" onclick="return confirm('آیا مطمئن هستید؟')">
+                        <button>حذف</button>
+                    </a>
+                </td>
+            </tr>
+
+            <!-- فرم ویرایش -->
+            <tr id="edit-form-{{ row[0] }}" class="edit-form">
+                <td colspan="9">
+                    <form action="/edit/{{ row[0] }}" method="post" enctype="multipart/form-data">
+                        <input type="text" name="tool_type" value="{{ row[1] }}" required>
+                        <input type="text" name="serial_number" value="{{ row[2] }}" required>
+                        <input type="text" name="size" value="{{ row[3] }}" required>
+                        <input type="text" name="thread_type" value="{{ row[4] }}" required>
+                        <input type="text" name="location" value="{{ row[5] }}" required>
+                        <select name="status" required>
+                            <option value="In Use" {% if row[6]=='In Use' %}selected{% endif %}>In Use</option>
+                            <option value="Available" {% if row[6]=='Available' %}selected{% endif %}>Available</option>
+                            <option value="Repair" {% if row[6]=='Repair' %}selected{% endif %}>Repair</option>
+                            <option value="Scrap" {% if row[6]=='Scrap' %}selected{% endif %}>Scrap</option>
+                            <option value="Class 2" {% if row[6]=='Class 2' %}selected{% endif %}>Class 2</option> <!-- 🔹 در فرم ویرایش -->
+                        </select>
+                        <input type="file" name="report_link" accept=".pdf">
+                        <input type="submit" value="ذخیره تغییرات">
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
     </table>
+
+    <script>
+        function toggleEditForm(id) {
+            const form = document.getElementById('edit-form-' + id);
+            form.style.display = form.style.display === 'table-row' ? 'none' : 'table-row';
+        }
+    </script>
+
 </body>
 </html>
