@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for
 import sqlite3
 import os
 from werkzeug.utils import secure_filename
+import openpyxl
 
 app = Flask(__name__)
 
@@ -11,6 +12,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 DATABASE = os.path.join(BASE_DIR, "inventory.db")
+
 
 def init_db():
     conn = sqlite3.connect(DATABASE)
@@ -30,7 +32,9 @@ def init_db():
     conn.commit()
     conn.close()
 
+
 init_db()
+
 
 @app.route("/", methods=["GET"])
 def index():
@@ -59,18 +63,20 @@ def index():
         query += " AND location LIKE ?"
         params.append(f"%{location}%")
     if status:
-        query += " AND status LIKE ?"
-        params.append(f"%{status}%")
+        query += " AND status=?"
+        params.append(status)
 
     cursor.execute(query, params)
     items = cursor.fetchall()
     conn.close()
 
-    return render_template("index.html", items=items, tool_type=tool_type, serial_number=serial_number, size=size, location=location, status=status)
+    return render_template("index.html", items=items, tool_type=tool_type,
+                           serial_number=serial_number, size=size, location=location)
+
 
 @app.route("/add", methods=["POST"])
 def add():
-    tool_type = request.form.get("tool_type", "").strip()
+    tool_type = request.form["tool_type"]
     serial_number = request.form["serial_number"]
     size = request.form["size"]
     thread_type = request.form["thread_type"]
@@ -95,6 +101,42 @@ def add():
     conn.close()
 
     return redirect(url_for("index"))
+
+
+@app.route("/upload_excel", methods=["POST"])
+def upload_excel():
+    excel_file = request.files.get("excel_file")
+    if not excel_file:
+        return redirect(url_for("index"))
+
+    filename = secure_filename(excel_file.filename)
+    path = os.path.join(BASE_DIR, filename)
+    excel_file.save(path)
+
+    try:
+        wb = openpyxl.load_workbook(path)
+        sheet = wb.active
+    except Exception as e:
+        return f"خطا در خواندن فایل اکسل: {str(e)}"
+
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+
+    for row in sheet.iter_rows(min_row=2, values_only=True):
+        if len(row) < 6:
+            continue  # نادیده گرفتن سطرهای ناقص
+        tool_type, serial_number, size, thread_type, location, status = row[:6]
+        report_link = ""
+        cursor.execute("""
+            INSERT INTO inventory (tool_type, serial_number, size, thread_type, location, status, report_link)
+            VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                       (tool_type, serial_number, size, thread_type, location, status, report_link))
+    conn.commit()
+    conn.close()
+
+    os.remove(path)
+    return redirect(url_for("index"))
+
 
 @app.route("/edit/<int:item_id>", methods=["GET", "POST"])
 def edit(item_id):
@@ -131,6 +173,7 @@ def edit(item_id):
     conn.close()
     return render_template("edit.html", item=item)
 
+
 @app.route("/delete/<int:item_id>")
 def delete(item_id):
     conn = sqlite3.connect(DATABASE)
@@ -139,6 +182,7 @@ def delete(item_id):
     conn.commit()
     conn.close()
     return redirect(url_for("index"))
+
 
 if __name__ == "__main__":
     app.run(debug=True)
