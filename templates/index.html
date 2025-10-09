@@ -9,15 +9,13 @@
             direction: rtl;
             margin: 20px;
         }
-        h1 {
-            text-align: center;
-            font-weight: bold;
-        }
+        h1 { text-align: center; font-weight: bold; font-size: 24px; }
         form {
             margin-bottom: 20px;
-            padding: 10px;
+            padding: 15px;
             border: 1px solid #ccc;
             border-radius: 12px;
+            background: #f9f9f9;
         }
         input, select, button {
             margin: 5px;
@@ -40,68 +38,80 @@
         }
         th, td {
             border: 1px solid #666;
-            padding: 10px;
+            padding: 8px;
             text-align: center;
-            font-size: 15px;
+            font-size: 14px;
         }
-        th {
-            background: #eee;
+        th { background: #eee; }
+        a { color: blue; text-decoration: none; }
+        .tool-type-container {
+            display: flex;
+            gap: 5px;
         }
-        a {
-            color: blue;
-            text-decoration: none;
+        .tool-type-container input {
+            flex: 1;
         }
-        .flash {
-            padding: 10px;
-            margin-bottom: 15px;
-            border-radius: 8px;
+        .tool-type-container select {
+            flex: 1;
         }
-        .success { background: #d4edda; color: #155724; }
-        .danger { background: #f8d7da; color: #721c24; }
     </style>
 </head>
 <body>
     <h1>مدیریت ابزار در گردش</h1>
 
-    <!-- نمایش پیام ها -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="flash {{ category }}">{{ message }}</div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-
     <!-- فرم ثبت ابزار -->
     <form method="POST" action="/add" enctype="multipart/form-data">
-        <input type="text" name="tool_type" placeholder="نوع ابزار" required>
+        <div class="tool-type-container">
+            <input type="text" name="tool_type" placeholder="نوع ابزار" required>
+            <select name="tool_type_select" onchange="document.querySelector('[name=tool_type]').value=this.value;">
+                <option value="">انتخاب نوع ابزار</option>
+                <option value="Drill Pipe">Drill Pipe</option>
+                <option value="HW">HW</option>
+                <option value="Drill Collar">Drill Collar</option>
+                <option value="Cross Over">Cross Over</option>
+                <option value="Bit Sub">Bit Sub</option>
+                <option value="Short Sub">Short Sub</option>
+                <option value="Casing Scrapper">Casing Scrapper</option>
+                <option value="Uper I-BOP">Uper I-BOP</option>
+                <option value="Lower I-BOP">Lower I-BOP</option>
+                <option value="Double Box">Double Box</option>
+                <option value="Saver Sub">Saver Sub</option>
+                <option value="Safty Valve">Safty Valve</option>
+            </select>
+        </div>
+
         <input type="text" name="serial_number" placeholder="شماره سریال" required>
         <input type="text" name="size" placeholder="سایز">
         <input type="text" name="thread_type" placeholder="نوع رزوه">
         <input type="text" name="location" placeholder="محل نگهداری">
+        
         <select name="status">
             <option value="آماده">✅ آماده استفاده</option>
             <option value="تعمیر">🛠 نیاز به تعمیر</option>
             <option value="سندبلاست">🌀 نیاز به سندبلاست</option>
             <option value="خراب">❌ خراب</option>
-            <option value="Class 2">📘 Class 2</option>
+            <option value="نیاز به بازرسی">🔍 نیاز به بازرسی</option>
         </select>
+
         گزارش (PDF): <input type="file" name="report_file">
         <button type="submit">➕ ثبت ابزار</button>
     </form>
 
-    <!-- فرم آپلود اکسل -->
-    <form method="POST" action="/upload_excel" enctype="multipart/form-data">
-        <input type="file" name="excel_file" accept=".xlsx, .xls">
-        <button type="submit">📁 بارگذاری اکسل</button>
-    </form>
-
     <!-- فرم جستجو -->
     <form method="get" action="/">
-        <input type="text" name="tool_type" value="{{ tool_type }}" placeholder="نوع ابزار">
-        <input type="text" name="serial_number" value="{{ serial_number }}" placeholder="شماره سریال">
-        <input type="text" name="status" value="{{ status }}" placeholder="وضعیت">
-        <input type="text" name="location" value="{{ location }}" placeholder="محل نگهداری">
+        <input type="text" name="tool_type" placeholder="نوع ابزار">
+        <input type="text" name="serial_number" placeholder="شماره سریال">
+        <input type="text" name="size" placeholder="سایز">
+        <input type="text" name="location" placeholder="محل نگهداری">
+        <select name="status">
+            <option value="">همه وضعیت‌ها</option>
+            <option value="آماده">✅ آماده استفاده</option>
+            <option value="تعمیر">🛠 نیاز به تعمیر</option>
+            <option value="سندبلاست">🌀 نیاز به سندبلاست</option>
+            <option value="خراب">❌ خراب</option>
+            <option value="نیاز به بازرسی">🔍 نیاز به بازرسی</option>
+            <option value="Class 2">📘 Class 2</option>
+        </select>
         <button type="submit">🔍 جستجو</button>
         <a href="/"><button type="button">نمایش همه</button></a>
     </form>
