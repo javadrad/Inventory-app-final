@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <title>مدیریت ابزار در گردش</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="watermark"></div>
+    <h1>مدیریت ابزار در گردش</h1>
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- ثبت ابزار -->
+        <form method="POST" action="/add" enctype="multipart/form-data" class="card">
+            <h3>➕ ثبت ابزار جدید</h3>
+            <div class="row">
+                <div class="tool-type-container">
+                    <input type="text" name="tool_type" placeholder="نوع ابزار" required>
+                    <select name="tool_type_select" onchange="document.querySelector('[name=tool_type]').value=this.value;">
+                        <option value="">انتخاب نوع ابزار</option>
+                        <option value="Drill Pipe">Drill Pipe</option>
+                        <option value="HW">HW</option>
+                        <option value="Drill Collar">Drill Collar</option>
+                        <option value="Cross Over">Cross Over</option>
+                        <option value="Bit Sub">Bit Sub</option>
+                        <option value="Short Sub">Short Sub</option>
+                        <option value="Casing Scrapper">Casing Scrapper</option>
+                        <option value="Uper I-BOP">Uper I-BOP</option>
+                        <option value="Lower I-BOP">Lower I-BOP</option>
+                        <option value="Double Box">Double Box</option>
+                        <option value="Saver Sub">Saver Sub</option>
+                        <option value="Safty Valve">Safty Valve</option>
+                        <option value="PUP Joint">PUP Joint</option>
+                        <option value="Fishing">Fishing</option>
+                    </select>
+                </div>
+                <input type="text" name="serial_number" placeholder="شماره سریال" required>
+                <input type="text" name="size" placeholder="سایز">
+                <input type="text" name="thread_type" placeholder="نوع رزوه">
+                <input type="text" name="location" placeholder="محل نگهداری">
+                <select name="status">
+                    <option value="آماده">✅ آماده استفاده</option>
+                    <option value="تعمیر">🛠 نیاز به تعمیر</option>
+                    <option value="سندبلاست">🌀 نیاز به سندبلاست</option>
+                    <option value="خراب">❌ خراب</option>
+                    <option value="نیاز به بازرسی">🔍 نیاز به بازرسی</option>
+                    <option value="Class 2">📘 Class 2</option>
+                </select>
+                <label>گزارش (PDF): <input type="file" name="report_file" accept=".pdf"></label>
+            </div>
+            <div class="actions">
+                <button type="submit">ثبت ابزار</button>
+                <form method="POST" action="/upload_excel" enctype="multipart/form-data" class="inline-form">
+                    <input type="file" name="excel_file" accept=".xlsx,.xls" required>
+                    <button type="submit">📁 بارگذاری اکسل</button>
+                </form>
+            </div>
+        </form>
+
+        <!-- جستجو -->
+        <form method="get" action="/" class="card">
+            <h3>🔍 جستجو</h3>
+            <div class="row">
+                <select name="tool_type">
+                    <option value="">-- همه نوع ابزار --</option>
+                    <option value="Drill Pipe">Drill Pipe</option>
+                    <option value="HW">HW</option>
+                    <option value="Drill Collar">Drill Collar</option>
+                    <option value="Cross Over">Cross Over</option>
+                    <option value="Bit Sub">Bit Sub</option>
+                    <option value="Short Sub">Short Sub</option>
+                    <option value="Casing Scrapper">Casing Scrapper</option>
+                    <option value="Uper I-BOP">Uper I-BOP</option>
+                    <option value="Lower I-BOP">Lower I-BOP</option>
+                    <option value="Double Box">Double Box</option>
+                    <option value="Saver Sub">Saver Sub</option>
+                    <option value="Safty Valve">Safty Valve</option>
+                    <option value="PUP Joint">PUP Joint</option>
+                    <option value="Fishing">Fishing</option>
+                </select>
+                <input type="text" name="serial_number" value="{{ serial_number }}" placeholder="شماره سریال">
+                <input type="text" name="size" value="{{ size }}" placeholder="سایز">
+                <input type="text" name="location" value="{{ location }}" placeholder="محل نگهداری">
+                <select name="status">
+                    <option value="">همه وضعیت‌ها</option>
+                    <option value="آماده">✅ آماده استفاده</option>
+                    <option value="تعمیر">🛠 نیاز به تعمیر</option>
+                    <option value="سندبلاست">🌀 نیاز به سندبلاست</option>
+                    <option value="خراب">❌ خراب</option>
+                    <option value="نیاز به بازرسی">🔍 نیاز به بازرسی</option>
+                    <option value="Class 2">📘 Class 2</option>
+                </select>
+                <div class="actions">
+                    <button type="submit">جستجو</button>
+                    <a href="/"><button type="button">نمایش همه</button></a>
+                </div>
+            </div>
+        </form>
+
+        <!-- جدول -->
+        <div class="card">
+            <h3>📋 لیست ابزارها</h3>
+            <table class="compact">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>نوع ابزار</th>
+                        <th>شماره سریال</th>
+                        <th>سایز</th>
+                        <th>نوع رزوه</th>
+                        <th>محل</th>
+                        <th>وضعیت</th>
+                        <th>گزارش</th>
+                        <th>عملیات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for it in items %}
+                    <tr>
+                        <td>{{ it[0] }}</td>
+                        <td>{{ it[1] }}</td>
+                        <td>{{ it[2] }}</td>
+                        <td>{{ it[3] }}</td>
+                        <td>{{ it[4] }}</td>
+                        <td>{{ it[5] }}</td>
+                        <td>{{ it[6] }}</td>
+                        <td>
+                            {% if it[7] %}
+                                <a href="{{ it[7] }}" target="_blank">مشاهده</a>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="/edit/{{ it[0] }}"><button>ویرایش</button></a>
+                            <a href="/delete/{{ it[0] }}" onclick="return confirm('آیا مطمئن هستید؟')"><button class="danger">حذف</button></a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>
