@@ -5,52 +5,115 @@
     <title>ویرایش ابزار</title>
     <style>
         body {
-            font-family: "B Nazanin", Arial, sans-serif;
+            font-family: "Tahoma", sans-serif;
             direction: rtl;
-            margin: 20px;
+            background: linear-gradient(to bottom right, #f7f9fb, #e1eaf2);
+            margin: 0;
+            padding: 0;
         }
-        h1 { text-align: center; font-weight: bold; }
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-top: 20px;
+            text-shadow: 1px 1px 2px #aaa;
+        }
+        .container {
+            width: 70%;
+            margin: 30px auto;
+            background: #fff;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
         form {
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
-        input, select, button {
-            margin: 5px;
+        input[type="text"], select, input[type="file"] {
             padding: 8px;
             border-radius: 8px;
-            border: 1px solid #aaa;
+            border: 1px solid #ccc;
+            font-size: 14px;
+        }
+        label {
+            font-weight: bold;
+            color: #444;
         }
         button {
-            background: #2196F3;
+            background: linear-gradient(to bottom, #4a90e2, #357ab8);
             color: white;
-            font-weight: bold;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
             cursor: pointer;
-            box-shadow: 2px 2px 5px #999;
+            transition: 0.2s;
+            font-size: 15px;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.2);
+        }
+        button:hover {
+            transform: translateY(-1px);
+            background: linear-gradient(to bottom, #5aa3f0, #2e68a8);
+        }
+        a button {
+            background: linear-gradient(to bottom, #6c757d, #555);
+        }
+        a button:hover {
+            background: linear-gradient(to bottom, #7e868d, #444);
+        }
+        .report-link {
+            margin: 10px 0;
+            color: #0066cc;
+            text-decoration: none;
+        }
+        .report-link:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
-    <h1>ویرایش ابزار</h1>
+    <h2>✏️ ویرایش اطلاعات ابزار</h2>
+    <div class="container">
+        <form method="POST" enctype="multipart/form-data">
+            <label>نوع ابزار:</label>
+            <input type="text" name="tool_type" value="{{ tool[1] }}" required>
 
-    <form method="POST" enctype="multipart/form-data">
-        <input type="text" name="tool_type" value="{{ item[1] }}" required>
-        <input type="text" name="serial_number" value="{{ item[2] }}" required>
-        <input type="text" name="size" value="{{ item[3] }}">
-        <input type="text" name="thread_type" value="{{ item[4] }}">
-        <input type="text" name="location" value="{{ item[5] }}">
-        <select name="status">
-            <option value="آماده" {% if item[6]=='آماده' %}selected{% endif %}>✅ آماده استفاده</option>
-            <option value="تعمیر" {% if item[6]=='تعمیر' %}selected{% endif %}>🛠 نیاز به تعمیر</option>
-            <option value="سندبلاست" {% if item[6]=='سندبلاست' %}selected{% endif %}>🌀 نیاز به سندبلاست</option>
-            <option value="خراب" {% if item[6]=='خراب' %}selected{% endif %}>❌ خراب</option>
-            <option value="Class 2" {% if item[6]=='Class 2' %}selected{% endif %}>📘 Class 2</option>
-        </select>
-        گزارش (PDF): <input type="file" name="report_file">
-        <input type="hidden" name="report_link" value="{{ item[7] }}">
-        <button type="submit">ثبت تغییرات</button>
-    </form>
+            <label>شماره سریال:</label>
+            <input type="text" name="serial_number" value="{{ tool[2] }}" required>
 
-    <a href="/"><button>بازگشت</button></a>
+            <label>سایز ابزار:</label>
+            <input type="text" name="size" value="{{ tool[3] }}">
+
+            <label>نوع رزوه:</label>
+            <input type="text" name="thread_type" value="{{ tool[4] }}">
+
+            <label>محل نگهداری:</label>
+            <input type="text" name="location" value="{{ tool[5] }}">
+
+            <label>وضعیت:</label>
+            <select name="status">
+                <option value="Active" {% if tool[6] == 'Active' %}selected{% endif %}>Active</option>
+                <option value="Inactive" {% if tool[6] == 'Inactive' %}selected{% endif %}>Inactive</option>
+                <option value="Under Repair" {% if tool[6] == 'Under Repair' %}selected{% endif %}>Under Repair</option>
+                <option value="Scrap" {% if tool[6] == 'Scrap' %}selected{% endif %}>Scrap</option>
+                <option value="Class 2" {% if tool[6] == 'Class 2' %}selected{% endif %}>Class 2</option>
+            </select>
+
+            <label>فایل گزارش:</label>
+            {% if tool[7] %}
+                <a href="{{ url_for('reports', filename=tool[7].split('/')[-1]) }}" target="_blank" class="report-link">
+                    مشاهده گزارش فعلی
+                </a>
+            {% else %}
+                <p style="color:#888;">گزارشی برای این ابزار ثبت نشده است.</p>
+            {% endif %}
+            <input type="file" name="report_link" accept=".pdf,.jpg,.png">
+
+            <div style="display:flex;justify-content:space-between;margin-top:15px;">
+                <button type="submit">ذخیره تغییرات</button>
+                <a href="/"><button type="button">بازگشت</button></a>
+            </div>
+        </form>
+    </div>
 </body>
 </html>
