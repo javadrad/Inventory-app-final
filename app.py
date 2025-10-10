@@ -1,16 +1,17 @@
 from flask import Flask, render_template, request, redirect, url_for
 import sqlite3
 import os
-import pandas as pd
 from werkzeug.utils import secure_filename
+import csv
 
 app = Flask(__name__)
 
-UPLOAD_FOLDER = os.path.join("static", "reports")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+UPLOAD_FOLDER = os.path.join(BASE_DIR, "static", "reports")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
-DATABASE = "inventory.db"
+DATABASE = os.path.join(BASE_DIR, "inventory.db")
 
 def init_db():
     conn = sqlite3.connect(DATABASE)
@@ -33,7 +34,7 @@ def init_db():
 
 init_db()
 
-@app.route("/", methods=["GET"])
+@app.route("/", methods=["GET", "POST"])
 def index():
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
@@ -146,19 +147,28 @@ def delete(item_id):
 @app.route("/upload_excel", methods=["POST"])
 def upload_excel():
     file = request.files.get("excel_file")
-    if file and file.filename.endswith((".xlsx", ".xls")):
-        df = pd.read_excel(file)
+    if not file or not file.filename.endswith(".csv"):
+        return "لطفاً فایل CSV معتبر انتخاب کنید", 400
+
+    csv_path = os.path.join(BASE_DIR, "temp.csv")
+    file.save(csv_path)
+
+    with open(csv_path, newline='', encoding="utf-8") as csvfile:
+        reader = csv.reader(csvfile)
+        header = next(reader, None)
+        if not header or len(header) != 7:
+            return "فرمت فایل CSV صحیح نیست", 400
         conn = sqlite3.connect(DATABASE)
-        for _, row in df.iterrows():
-            cursor = conn.cursor()
+        cursor = conn.cursor()
+        for row in reader:
+            if len(row) != 7:
+                continue
             cursor.execute("""
-                INSERT INTO inventory (tool_type, serial_number, size, thread_type, location, status, report_link, description)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
-                           (row.get("tool_type"), row.get("serial_number"), row.get("size"),
-                            row.get("thread_type"), row.get("location"), row.get("status"),
-                            row.get("report_link"), row.get("description")))
+                INSERT INTO inventory (tool_type, serial_number, size, thread_type, location, status, description)
+                VALUES (?, ?, ?, ?, ?, ?, ?)""", tuple(row))
         conn.commit()
         conn.close()
+
     return redirect(url_for("index"))
 
 if __name__ == "__main__":
