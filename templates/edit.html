@@ -1,140 +1,45 @@
 <!DOCTYPE html>
 <html lang="fa">
 <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
     <title>ویرایش ابزار</title>
     <style>
-        body {
-            font-family: "Tahoma", sans-serif;
-            background: #f6f8fa;
-            margin: 0;
-            padding: 20px;
-        }
-        .container {
-            max-width: 650px;
-            margin: 0 auto;
-            background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
-            padding: 20px;
-        }
-        h2 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 25px;
-        }
-        label {
-            display: block;
-            margin-top: 10px;
-            font-weight: bold;
-            color: #333;
-        }
-        input[type="text"], select, textarea {
-            width: 100%;
-            padding: 7px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            margin-top: 5px;
-            font-size: 14px;
-            box-sizing: border-box;
-        }
-        textarea {
-            resize: vertical;
-        }
-        button {
-            background: #007bff;
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            padding: 8px 16px;
-            font-size: 14px;
-            cursor: pointer;
-            margin-top: 18px;
-        }
-        button:hover {
-            background: #0056b3;
-        }
-        a.cancel {
-            display: inline-block;
-            margin-left: 10px;
-            background: #6c757d;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 8px;
-            text-decoration: none;
-        }
-        a.cancel:hover {
-            background: #5a6268;
-        }
-        .file-label {
-            margin-top: 10px;
-            display: block;
-            font-weight: bold;
-        }
+        body { font-family: Arial, sans-serif; background: #eef2f7; padding: 20px; }
+        form { background: #fff; padding: 20px; border-radius: 10px; max-width: 600px; margin: auto; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+        input, select { width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 6px; }
+        button { background: #3f51b5; color: #fff; border: none; padding: 10px; width: 100%; border-radius: 6px; cursor: pointer; }
+        button:hover { background: #303f9f; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>✏️ ویرایش اطلاعات ابزار</h2>
-        <form method="POST" enctype="multipart/form-data">
+    <h2 style="text-align:center;">ویرایش اطلاعات ابزار</h2>
+    <form method="POST">
+        <label>نوع ابزار:</label>
+        <input type="text" name="tool_type" value="{{ item[1] }}">
 
-            <label>نوع ابزار</label>
-            <input type="text" name="tool_type" value="{{ item['tool_type'] }}">
-            <select onchange="if(this.value) document.querySelector('[name=tool_type]').value=this.value;">
-                <option value="">انتخاب از لیست...</option>
-                <option>Drill Pipe</option>
-                <option>HW</option>
-                <option>Drill Collar</option>
-                <option>Cross Over</option>
-                <option>Bit Sub</option>
-                <option>Short Sub</option>
-                <option>Casing Scrapper</option>
-                <option>Uper I-BOP</option>
-                <option>Lower I-BOP</option>
-                <option>Double Box</option>
-                <option>Saver Sub</option>
-                <option>Safty Valve</option>
-                <option>PUP Joint</option>
-                <option>Fishing</option>
-            </select>
+        <label>شماره سریال:</label>
+        <input type="text" name="serial_number" value="{{ item[2] }}">
 
-            <label>شماره سریال</label>
-            <input type="text" name="serial_number" value="{{ item['serial_number'] }}">
+        <label>سایز:</label>
+        <input type="text" name="size" value="{{ item[3] }}">
 
-            <label>سایز</label>
-            <input type="text" name="size" value="{{ item['size'] }}">
+        <label>نوع رزوه:</label>
+        <input type="text" name="thread_type" value="{{ item[4] }}">
 
-            <label>نوع رزوه</label>
-            <input type="text" name="thread_type" value="{{ item['thread_type'] }}">
+        <label>محل:</label>
+        <input type="text" name="location" value="{{ item[5] }}">
 
-            <label>محل نگهداری</label>
-            <input type="text" name="location" value="{{ item['location'] }}">
+        <label>وضعیت:</label>
+        <select name="status">
+            {% for option in ['Ready to Use', 'Need to Sandblast', 'Need to Inspection', 'Class 2', 'Scrap', 'Need to Repair'] %}
+                <option value="{{ option }}" {% if option == item[6] %}selected{% endif %}>{{ option }}</option>
+            {% endfor %}
+        </select>
 
-            <label>وضعیت</label>
-            <select name="status">
-                <option {% if item['status']=="آماده" %}selected{% endif %}>آماده</option>
-                <option {% if item['status']=="تعمیر" %}selected{% endif %}>تعمیر</option>
-                <option {% if item['status']=="سندبلاست" %}selected{% endif %}>سندبلاست</option>
-                <option {% if item['status']=="خراب" %}selected{% endif %}>خراب</option>
-                <option {% if item['status']=="نیاز به بازرسی" %}selected{% endif %}>نیاز به بازرسی</option>
-                <option {% if item['status']=="Class 2" %}selected{% endif %}>Class 2</option>
-            </select>
+        <label>توضیحات:</label>
+        <input type="text" name="description" value="{{ item[8] or '' }}">
 
-            <label class="file-label">فایل گزارش جدید (اختیاری)</label>
-            <input type="file" name="report_file" accept=".pdf">
-
-            {% if item['report_link'] %}
-                <p>📎 گزارش فعلی: <a href="{{ item['report_link'] }}" target="_blank">مشاهده فایل</a></p>
-            {% endif %}
-
-            <label>توضیحات</label>
-            <textarea name="description" rows="3" placeholder="توضیحات (اختیاری)">{{ item['description'] }}</textarea>
-
-            <div style="text-align:center;">
-                <button type="submit">💾 ذخیره تغییرات</button>
-                <a href="/" class="cancel">بازگشت</a>
-            </div>
-        </form>
-    </div>
+        <button type="submit">ذخیره تغییرات</button>
+    </form>
 </body>
 </html>
