@@ -4,103 +4,144 @@
     <meta charset="UTF-8">
     <title>مدیریت ابزار در گردش</title>
     <style>
-        body { font-family: Arial, sans-serif; background: #f7f9fc; margin: 0; padding: 20px; }
-        h1 { text-align: center; }
-        form, table { width: 100%; margin: 20px auto; }
-        table { border-collapse: collapse; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        th, td { border: 1px solid #ddd; padding: 6px 10px; text-align: center; }
-        th { background: #3f51b5; color: #fff; }
-        tr:nth-child(even) { background: #f2f2f2; }
-        select, input[type=text], input[type=file] { width: 100%; padding: 6px; border: 1px solid #ccc; border-radius: 6px; }
-        button { background: #3f51b5; color: white; border: none; padding: 6px 12px; margin: 2px; border-radius: 6px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-        button:hover { background: #303f9f; }
-        .action-btns { display: flex; justify-content: center; gap: 6px; }
+        body {
+            font-family: "B Nazanin", Arial, sans-serif;
+            direction: rtl;
+            margin: 20px;
+        }
+        h1 { text-align: center; font-weight: bold; }
+        form {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 12px;
+        }
+        input, select, button {
+            margin: 5px;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #aaa;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 2px 2px 5px #999;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            border: 1px solid #666;
+            padding: 6px;
+            text-align: center;
+        }
+        th { background: #eee; }
+        .operations button { margin: 2px; }
     </style>
 </head>
 <body>
-    <h1>برنامه مدیریت ابزار در گردش</h1>
+    <h1>مدیریت ابزار در گردش</h1>
 
-    <form action="/add" method="post" enctype="multipart/form-data">
-        <label>نوع ابزار:</label>
-        <select name="tool_type" required>
-            <option value="">انتخاب کنید</option>
-            <option value="Drill Pipe">Drill Pipe</option>
-            <option value="Drill Collar">Drill Collar</option>
-            <option value="Heavy Weight">Heavy Weight</option>
-            <option value="Crossover">Crossover</option>
-            <option value="Stabilizer">Stabilizer</option>
-            <option value="PUP Joint">PUP Joint</option>
-            <option value="Fishing">Fishing</option>
+    <!-- فرم آپلود اکسل -->
+    <form action="/upload_excel" method="post" enctype="multipart/form-data">
+        <input type="file" name="excel_file" accept=".xlsx,.xls" required>
+        <button type="submit">بارگذاری اکسل</button>
+    </form>
+
+    <!-- فرم ثبت ابزار -->
+    <form method="POST" action="/add" enctype="multipart/form-data">
+        <input type="text" name="tool_type" placeholder="نوع ابزار" required>
+        <select name="tool_type_select">
+            <option>Drill Pipe</option>
+            <option>HW</option>
+            <option>Drill Collar</option>
+            <option>Cross Over</option>
+            <option>Bit Sub</option>
+            <option>Short Sub</option>
+            <option>Casing Scrapper</option>
+            <option>Uper I-BOP</option>
+            <option>Lower I-BOP</option>
+            <option>Double Box</option>
+            <option>Saver Sub</option>
+            <option>Safty Valve</option>
+            <option>PUP Joint</option>
+            <option>Fishing</option>
         </select>
-
-        <label>شماره سریال:</label>
-        <input type="text" name="serial_number">
-
-        <label>سایز:</label>
-        <input type="text" name="size">
-
-        <label>نوع رزوه:</label>
-        <input type="text" name="thread_type">
-
-        <label>محل:</label>
-        <input type="text" name="location">
-
-        <label>وضعیت:</label>
+        <input type="text" name="serial_number" placeholder="شماره سریال" required>
+        <input type="text" name="size" placeholder="سایز">
+        <input type="text" name="thread_type" placeholder="نوع رزوه">
+        <input type="text" name="location" placeholder="محل نگهداری">
         <select name="status">
-            <option value="Ready to Use">Ready to Use</option>
-            <option value="Need to Sandblast">Need to Sandblast</option>
-            <option value="Need to Inspection">Need to Inspection</option>
-            <option value="Class 2">Class 2</option>
-            <option value="Scrap">Scrap</option>
-            <option value="Need to Repair">Need to Repair</option>
+            <option>Ready to Use</option>
+            <option>Need to Repair</option>
+            <option>Need to Sandblast</option>
+            <option>Scrap</option>
+            <option>Class 2</option>
+            <option>Need to Inspection</option>
         </select>
-
-        <label>گزارش بازرسی:</label>
-        <input type="file" name="report_link">
-
-        <label>توضیحات:</label>
-        <input type="text" name="description" placeholder="توضیحات اضافی...">
-
+        گزارش (PDF): <input type="file" name="report_file">
+        <input type="text" name="description" placeholder="توضیحات">
         <button type="submit">ثبت ابزار</button>
     </form>
 
-    <form action="/upload_excel" method="post" enctype="multipart/form-data">
-        <input type="file" name="excel_file" accept=".xlsx">
-        <button type="submit">بارگذاری</button>
+    <!-- فرم جستجو -->
+    <form method="get" action="/">
+        <input type="text" name="tool_type" value="{{ tool_type }}" placeholder="نوع ابزار">
+        <input type="text" name="serial_number" value="{{ serial_number }}" placeholder="شماره سریال">
+        <input type="text" name="size" value="{{ size }}" placeholder="سایز">
+        <input type="text" name="location" value="{{ location }}" placeholder="محل نگهداری">
+        <select name="status">
+            <option value="">همه</option>
+            <option>Ready to Use</option>
+            <option>Need to Repair</option>
+            <option>Need to Sandblast</option>
+            <option>Scrap</option>
+            <option>Class 2</option>
+            <option>Need to Inspection</option>
+        </select>
+        <button type="submit">جستجو</button>
+        <a href="/"><button type="button">نمایش همه</button></a>
     </form>
 
+    <!-- جدول ابزارها -->
     <table>
         <tr>
-            <th>ID</th>
+            <th>شناسه</th>
             <th>نوع ابزار</th>
             <th>شماره سریال</th>
             <th>سایز</th>
             <th>نوع رزوه</th>
-            <th>محل</th>
+            <th>محل نگهداری</th>
             <th>وضعیت</th>
-            <th>گزارش</th>
             <th>عملیات</th>
             <th>توضیحات</th>
+            <th>گزارش</th>
         </tr>
-        {% for row in data %}
+        {% for item in items %}
         <tr>
-            <td>{{ row[0] }}</td>
-            <td>{{ row[1] }}</td>
-            <td>{{ row[2] }}</td>
-            <td>{{ row[3] }}</td>
-            <td>{{ row[4] }}</td>
-            <td>{{ row[5] }}</td>
-            <td>{{ row[6] }}</td>
+            <td>{{ item[0] }}</td>
+            <td>{{ item[1] }}</td>
+            <td>{{ item[2] }}</td>
+            <td>{{ item[3] }}</td>
+            <td>{{ item[4] }}</td>
+            <td>{{ item[5] }}</td>
+            <td>{{ item[6] }}</td>
+            <td class="operations">
+                <a href="/edit/{{ item[0] }}"><button>ویرایش</button></a>
+                <a href="/delete/{{ item[0] }}"><button>❌</button></a>
+            </td>
+            <td>{{ item[8] }}</td>
             <td>
-                {% if row[7] %}
-                    <a href="{{ url_for('uploaded_file', filename=row[7].split('/')[-1]) }}" target="_blank">مشاهده</a>
+                {% if item[7] %}
+                    <a href="{{ item[7] }}" target="_blank">📄 مشاهده گزارش</a>
+                {% else %}
+                    -
                 {% endif %}
             </td>
-            <td class="action-btns">
-                <a href="/edit/{{ row[0] }}"><button>ویرایش</button></a>
-                <a href="/delete/{{ row[0] }}"><button>حذف</button></a>
-            </td>
-            <td>{{ row[8] or '' }}</td>
         </tr>
         {% endfor %}
     </table>
