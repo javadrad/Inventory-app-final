@@ -4,69 +4,158 @@
 <meta charset="UTF-8">
 <title>مدیریت ابزار در گردش</title>
 <style>
-    body { font-family: Arial, sans-serif; background: #f4f7fb; margin: 0; padding: 20px; }
-    h1 { text-align: center; color: #333; }
-    table { width: 100%; border-collapse: collapse; font-weight: bold; }
-    th, td { border: 1px solid #ccc; padding: 6px; text-align: center; }
+    @font-face {
+        font-family: "B Nazanin";
+        src: url("/static/fonts/B-NAZANIN.TTF") format("truetype");
+    }
+    body {
+        font-family: "B Nazanin", Arial, sans-serif;
+        direction: rtl;
+        margin: 20px;
+    }
+    h1 {
+        text-align: center;
+        font-weight: bold;
+    }
+    form {
+        margin-bottom: 20px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 12px;
+        background: white;
+    }
+    input, select, button {
+        margin: 5px;
+        padding: 8px;
+        border-radius: 8px;
+        border: 1px solid #aaa;
+        font-family: "B Nazanin", Arial, sans-serif;
+    }
+    button {
+        background: #007bff;
+        color: white;
+        font-weight: bold;
+        cursor: pointer;
+        box-shadow: 2px 2px 5px #999;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+    }
+    th, td {
+        border: 1px solid #666;
+        padding: 6px;
+        text-align: center;
+        font-weight: bold;
+        font-family: "B Nazanin", Arial, sans-serif;
+    }
     th { background: #eee; }
-    input, select { padding: 5px; margin: 5px; }
-    .btn { background-color: #007bff; color: white; border: none; padding: 8px 12px; cursor: pointer; font-weight: bold; border-radius: 4px; box-shadow: 0px 4px 6px rgba(0,0,0,0.2); }
-    .btn:hover { background-color: #0056b3; }
-    .search-container { margin-bottom: 15px; }
-    input[type="text"] { direction: ltr; }
+    td.threads {
+        font-size: 0.9em;
+    }
+    td.description input {
+        width: 95%;
+        padding: 4px;
+        font-size: 0.9em;
+    }
+    .operations button {
+        margin: 2px;
+        padding: 5px 10px;
+    }
+    a { color: blue; text-decoration: none; }
 </style>
 </head>
 <body>
+
 <h1>مدیریت ابزار در گردش</h1>
 
-<div class="search-container">
-    <form method="get" action="/">
-        <input type="text" name="tool_type" placeholder="نوع ابزار" value="{{ tool_type }}">
-        <input type="text" name="status" placeholder="وضعیت" value="{{ status }}">
-        <input type="text" name="location" placeholder="محل نگهداری" value="{{ location }}">
-        <input type="text" name="size" placeholder="سایز" value="{{ size }}">
-        <input type="text" name="thread_type" placeholder="نوع رزوه" value="{{ thread_type }}">
-        <button type="submit" class="btn">جستجو</button>
-    </form>
-</div>
-
-<form method="post" action="/upload_excel" enctype="multipart/form-data">
-    <input type="file" name="excel_file" accept=".xlsx">
-    <button type="submit" class="btn">بارگذاری</button>
+<!-- فرم ثبت ابزار -->
+<form method="POST" action="/add" enctype="multipart/form-data">
+    <label>ثبت دستی ابزار:</label><br>
+    <input type="text" name="tool_type" placeholder="نوع ابزار">
+    <input type="text" name="serial_number" placeholder="شماره سریال">
+    <input type="text" name="size" placeholder="سایز">
+    <input type="text" name="thread_type" placeholder="نوع رزوه">
+    <input type="text" name="location" placeholder="محل نگهداری">
+    <select name="status">
+        <option value="Ready to Use">Ready to Use</option>
+        <option value="Need to Repair">Need to Repair</option>
+        <option value="Need to Sandblast">Need to Sandblast</option>
+        <option value="Scrap">Scrap</option>
+        <option value="Class 2">Class 2</option>
+        <option value="Need to Inspection">Need to Inspection</option>
+    </select>
+    <button type="submit">ثبت ابزار</button>
 </form>
 
+<!-- فرم آپلود اکسل -->
+<form method="POST" action="/upload_excel" enctype="multipart/form-data">
+    <label>بارگذاری فایل اکسل:</label><br>
+    <input type="file" name="excel_file" accept=".xlsx">
+    <button type="submit">بارگذاری</button>
+</form>
+
+<!-- فرم جستجو -->
+<form method="get" action="/">
+    <input type="text" name="tool_type" placeholder="نوع ابزار">
+    <input type="text" name="serial_number" placeholder="شماره سریال">
+    <input type="text" name="size" placeholder="سایز">
+    <input type="text" name="thread_type" placeholder="نوع رزوه">
+    <input type="text" name="location" placeholder="محل نگهداری">
+    <select name="status">
+        <option value="">وضعیت</option>
+        <option value="Ready to Use">Ready to Use</option>
+        <option value="Need to Repair">Need to Repair</option>
+        <option value="Need to Sandblast">Need to Sandblast</option>
+        <option value="Scrap">Scrap</option>
+        <option value="Class 2">Class 2</option>
+        <option value="Need to Inspection">Need to Inspection</option>
+    </select>
+    <button type="submit">جستجو</button>
+    <a href="/"><button type="button">نمایش همه</button></a>
+</form>
+
+<!-- جدول ابزارها -->
 <table>
-    <thead>
-        <tr>
-            <th>شناسه</th>
-            <th>نوع ابزار</th>
-            <th>شماره سریال</th>
-            <th>سایز</th>
-            <th>نوع رزوه</th>
-            <th>محل نگهداری</th>
-            <th>وضعیت</th>
-            <th>عملیات</th>
-            <th>شرح / توضیحات</th>
-        </tr>
-    </thead>
-    <tbody>
+    <tr>
+        <th>شناسه</th>
+        <th>نوع ابزار</th>
+        <th>شماره سریال</th>
+        <th>سایز</th>
+        <th style="width:120px;">نوع رزوه</th>
+        <th>محل نگهداری</th>
+        <th>وضعیت</th>
+        <th style="width:150px;">عملیات</th>
+        <th>شرح</th>
+        <th>گزارش</th>
+    </tr>
     {% for item in items %}
-        <tr>
-            <td>{{ item[0] }}</td>
-            <td>{{ item[1] }}</td>
-            <td style="direction:ltr;">{{ item[2] }}</td>
-            <td style="direction:ltr;">{{ item[3] }}</td>
-            <td>{{ item[4] }}</td>
-            <td>{{ item[5] }}</td>
-            <td>{{ item[6] }}</td>
-            <td>
-                <a href="/edit/{{ item[0] }}" class="btn">ویرایش</a>
-                <a href="/delete/{{ item[0] }}" class="btn" style="background-color:red;">حذف</a>
-            </td>
-            <td>{{ item[8] }}</td>
-        </tr>
+    <tr>
+        <td>{{ item[0] }}</td>
+        <td>{{ item[1] }}</td>
+        <td style="direction:ltr;">{{ item[2] }}</td>
+        <td style="direction:ltr;">{{ item[3] }}</td>
+        <td class="threads">{{ item[4] }}</td>
+        <td>{{ item[5] }}</td>
+        <td>{{ item[6] }}</td>
+        <td class="operations">
+            <a href="/edit/{{ item[0] }}"><button>ویرایش</button></a>
+            <a href="/delete/{{ item[0] }}"><button>حذف</button></a>
+        </td>
+        <td class="description">
+            <input type="text" value="{{ item[8] or '' }}">
+        </td>
+        <td>
+            {% if item[7] %}
+                <a href="{{ item[7] }}" target="_blank">📄 مشاهده گزارش</a>
+            {% else %}
+                -
+            {% endif %}
+        </td>
+    </tr>
     {% endfor %}
-    </tbody>
 </table>
+
 </body>
 </html>
