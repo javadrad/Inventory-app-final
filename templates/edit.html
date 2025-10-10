@@ -4,35 +4,15 @@
     <meta charset="UTF-8">
     <title>ویرایش ابزار</title>
     <style>
-        body {
-            font-family: "B Nazanin", Arial, sans-serif;
-            direction: rtl;
-            margin: 20px;
-        }
+        body { font-family: Arial, sans-serif; direction: rtl; margin: 20px; }
         h1 { text-align: center; font-weight: bold; }
-        form {
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 12px;
-        }
-        input, select, button {
-            margin: 5px;
-            padding: 8px;
-            border-radius: 8px;
-            border: 1px solid #aaa;
-        }
-        button {
-            background: #2196F3;
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 2px 2px 5px #999;
-        }
+        form { padding: 10px; border: 1px solid #ccc; border-radius: 12px; }
+        input, select, button { margin: 5px; padding: 8px; border-radius: 8px; border: 1px solid #aaa; }
+        button { background: #2196F3; color: white; font-weight: bold; cursor: pointer; box-shadow: 2px 2px 5px #999; }
     </style>
 </head>
 <body>
     <h1>ویرایش ابزار</h1>
-
     <form method="POST" enctype="multipart/form-data">
         <input type="text" name="tool_type" value="{{ item[1] }}" required>
         <input type="text" name="serial_number" value="{{ item[2] }}" required>
@@ -40,17 +20,18 @@
         <input type="text" name="thread_type" value="{{ item[4] }}">
         <input type="text" name="location" value="{{ item[5] }}">
         <select name="status">
-            <option {% if item[6] == "Ready to Use" %}selected{% endif %}>Ready to Use</option>
-            <option {% if item[6] == "Need to Repair" %}selected{% endif %}>Need to Repair</option>
-            <option {% if item[6] == "Need to Sandblast" %}selected{% endif %}>Need to Sandblast</option>
-            <option {% if item[6] == "Scrap" %}selected{% endif %}>Scrap</option>
-            <option {% if item[6] == "Class 2" %}selected{% endif %}>Class 2</option>
-            <option {% if item[6] == "Need to Inspection" %}selected{% endif %}>Need to Inspection</option>
+            <option value="Ready to Use" {% if item[6]=='Ready to Use' %}selected{% endif %}>Ready to Use</option>
+            <option value="Need to Repair" {% if item[6]=='Need to Repair' %}selected{% endif %}>Need to Repair</option>
+            <option value="Need to Sandblast" {% if item[6]=='Need to Sandblast' %}selected{% endif %}>Need to Sandblast</option>
+            <option value="Scrap" {% if item[6]=='Scrap' %}selected{% endif %}>Scrap</option>
+            <option value="Class 2" {% if item[6]=='Class 2' %}selected{% endif %}>Class 2</option>
+            <option value="Need to Inspection" {% if item[6]=='Need to Inspection' %}selected{% endif %}>Need to Inspection</option>
         </select>
-        <input type="text" name="description" value="{{ item[8] }}" placeholder="توضیحات">
         گزارش (PDF): <input type="file" name="report_file">
         <input type="hidden" name="report_link" value="{{ item[7] }}">
-        <button type="submit">ذخیره تغییرات</button>
+        <input type="text" name="description" value="{{ item[8] }}" placeholder="شرح">
+        <button type="submit">ثبت تغییرات</button>
     </form>
+    <a href="/"><button>بازگشت</button></a>
 </body>
 </html>
