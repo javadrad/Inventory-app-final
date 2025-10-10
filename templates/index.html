@@ -1,169 +1,108 @@
 <!DOCTYPE html>
 <html lang="fa">
 <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
     <title>مدیریت ابزار در گردش</title>
-    <link rel="stylesheet" href="/static/style.css">
     <style>
-        /* جدول فشرده‌تر و عرض ستون‌ها بهتر */
-        table { width:100%; border-collapse: collapse; font-family: "Tahoma", sans-serif; }
-        th, td { border:1px solid #ddd; padding:6px; text-align:center; font-size:13px; }
-        th { background:#f0f3f6; color:#222; }
-        tbody tr:nth-child(even){ background:#fbfbfb; }
-        tbody tr:hover { background:#eef7ff; }
-        /* کاهش ارتفاع ردیف */
-        td, th { line-height:1.1; height:30px; }
-        /* دکمه‌ها */
-        .edit-btn { background:#28a745; color:#fff; padding:5px 8px; border-radius:6px; border:none; cursor:pointer; }
-        .delete-btn { background:#dc3545; color:#fff; padding:5px 8px; border-radius:6px; border:none; cursor:pointer; margin-left:6px; }
-        .btn { background:#007bff; color:#fff; padding:6px 10px; border-radius:8px; border:none; cursor:pointer; }
-        input[type="text"], select { padding:6px; border-radius:6px; border:1px solid #ccc; }
-        input.description-input { width:98%; padding:4px; font-size:13px; }
-        .actions-form { display:inline-block; margin:0; }
-        .compact-form { display:inline-block; margin-right:6px; }
-        .container { max-width:1100px; margin:18px auto; }
-        .card { background:#fff; padding:12px; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,0.04); margin-bottom:12px;}
+        body { font-family: Arial, sans-serif; background: #f7f9fc; margin: 0; padding: 20px; }
+        h1 { text-align: center; }
+        form, table { width: 100%; margin: 20px auto; }
+        table { border-collapse: collapse; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #ddd; padding: 6px 10px; text-align: center; }
+        th { background: #3f51b5; color: #fff; }
+        tr:nth-child(even) { background: #f2f2f2; }
+        select, input[type=text], input[type=file] { width: 100%; padding: 6px; border: 1px solid #ccc; border-radius: 6px; }
+        button { background: #3f51b5; color: white; border: none; padding: 6px 12px; margin: 2px; border-radius: 6px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        button:hover { background: #303f9f; }
+        .action-btns { display: flex; justify-content: center; gap: 6px; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1 style="text-align:center;">🛠 مدیریت ابزار در گردش</h1>
+    <h1>برنامه مدیریت ابزار در گردش</h1>
 
-        <!-- پیام‌ها -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, msg in messages %}
-                    <div style="padding:8px;border-radius:6px;margin-bottom:8px; {% if category=='success' %}background:#d4edda;color:#155724;{% elif category=='danger' %}background:#f8d7da;color:#721c24;{% else %}background:#eef2ff;color:#0b4da0;{% endif %}">
-                        {{ msg }}
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
+    <form action="/add" method="post" enctype="multipart/form-data">
+        <label>نوع ابزار:</label>
+        <select name="tool_type" required>
+            <option value="">انتخاب کنید</option>
+            <option value="Drill Pipe">Drill Pipe</option>
+            <option value="Drill Collar">Drill Collar</option>
+            <option value="Heavy Weight">Heavy Weight</option>
+            <option value="Crossover">Crossover</option>
+            <option value="Stabilizer">Stabilizer</option>
+            <option value="PUP Joint">PUP Joint</option>
+            <option value="Fishing">Fishing</option>
+        </select>
 
-        <!-- ثبت ابزار -->
-        <div class="card">
-            <form method="POST" action="/add" enctype="multipart/form-data" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
-                <input type="text" name="tool_type" placeholder="نوع ابزار (مثلاً HW)" style="min-width:220px;">
-                <select name="tool_type_select" onchange="if(this.value) document.querySelector('[name=tool_type]').value=this.value;">
-                    <option value="">انتخاب از لیست...</option>
-                    <option>Drill Pipe</option>
-                    <option>HW</option>
-                    <option>Drill Collar</option>
-                    <option>Cross Over</option>
-                    <option>Bit Sub</option>
-                    <option>Short Sub</option>
-                    <option>Casing Scrapper</option>
-                    <option>Uper I-BOP</option>
-                    <option>Lower I-BOP</option>
-                    <option>Double Box</option>
-                    <option>Saver Sub</option>
-                    <option>Safty Valve</option>
-                    <option>PUP Joint</option>
-                    <option>Fishing</option>
-                </select>
+        <label>شماره سریال:</label>
+        <input type="text" name="serial_number">
 
-                <input type="text" name="serial_number" placeholder="شماره سریال" style="min-width:160px;">
-                <input type="text" name="size" placeholder="سایز" style="width:90px;">
-                <input type="text" name="thread_type" placeholder="نوع رزوه" style="width:140px;">
-                <input type="text" name="location" placeholder="محل نگهداری" style="min-width:140px;">
+        <label>سایز:</label>
+        <input type="text" name="size">
 
-                <select name="status" style="min-width:160px;">
-                    <option>آماده</option>
-                    <option>تعمیر</option>
-                    <option>سندبلاست</option>
-                    <option>خراب</option>
-                    <option>نیاز به بازرسی</option>
-                    <option>Class 2</option>
-                </select>
+        <label>نوع رزوه:</label>
+        <input type="text" name="thread_type">
 
-                <label style="margin:0;">گزارش (PDF): <input type="file" name="report_file" accept=".pdf" style="margin-left:6px;"></label>
+        <label>محل:</label>
+        <input type="text" name="location">
 
-                <input type="text" name="description" placeholder="توضیحات (اختیاری)" style="flex:1; min-width:200px;">
+        <label>وضعیت:</label>
+        <select name="status">
+            <option value="Ready to Use">Ready to Use</option>
+            <option value="Need to Sandblast">Need to Sandblast</option>
+            <option value="Need to Inspection">Need to Inspection</option>
+            <option value="Class 2">Class 2</option>
+            <option value="Scrap">Scrap</option>
+            <option value="Need to Repair">Need to Repair</option>
+        </select>
 
-                <button type="submit" class="btn">➕ ثبت ابزار</button>
-            </form>
-        </div>
+        <label>گزارش بازرسی:</label>
+        <input type="file" name="report_link">
 
-        <!-- آپلود اکسل (فرم جدا) -->
-        <div class="card">
-            <form method="POST" action="/upload_excel" enctype="multipart/form-data" style="display:flex;gap:8px;align-items:center;">
-                <input type="file" name="excel_file" accept=".xlsx,.xls" required>
-                <button type="submit" class="btn">📤 بارگذاری</button>
-                <div style="color:#666;font-size:13px;margin-left:10px;">فرمت ستون‌ها (ترتیب): <strong>tool_type, serial_number, size, thread_type, location, status, description (اختیاری)</strong></div>
-            </form>
-        </div>
+        <label>توضیحات:</label>
+        <input type="text" name="description" placeholder="توضیحات اضافی...">
 
-        <!-- جستجو -->
-        <div class="card" style="display:flex;gap:8px;align-items:center;">
-            <form method="GET" action="/" style="display:flex;gap:8px;flex-wrap:wrap;">
-                <input type="text" name="tool_type" placeholder="نوع ابزار" value="{{ tool_type }}">
-                <input type="text" name="serial_number" placeholder="شماره سریال" value="{{ serial_number }}">
-                <input type="text" name="size" placeholder="سایز" value="{{ size }}">
-                <input type="text" name="location" placeholder="محل" value="{{ location }}">
-                <select name="status">
-                    <option value="">همه وضعیت‌ها</option>
-                    <option value="آماده">آماده</option>
-                    <option value="تعمیر">تعمیر</option>
-                    <option value="سندبلاست">سندبلاست</option>
-                    <option value="خراب">خراب</option>
-                    <option value="نیاز به بازرسی">نیاز به بازرسی</option>
-                    <option value="Class 2">Class 2</option>
-                </select>
-                <button type="submit" class="btn">🔍 جستجو</button>
-                <a href="/" style="text-decoration:none;"><button type="button" class="btn" style="background:#6c757d;">نمایش همه</button></a>
-            </form>
-        </div>
+        <button type="submit">ثبت ابزار</button>
+    </form>
 
-        <!-- جدول نمایش -->
-        <div class="card" style="overflow:auto;">
-            <table>
-                <thead>
-                    <tr>
-                        <th style="width:50px;">ID</th>
-                        <th style="min-width:130px;">نوع ابزار</th>
-                        <th style="min-width:120px;">شماره سریال</th>
-                        <th style="width:70px;">سایز</th>
-                        <th style="min-width:110px;">نوع رزوه</th>
-                        <th style="min-width:120px;">محل نگهداری</th>
-                        <th style="min-width:110px;">وضعیت</th>
-                        <th style="width:90px;">گزارش</th>
-                        <th style="min-width:180px;">توضیحات</th>
-                        <th style="width:120px;">عملیات</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for row in items %}
-                    <tr>
-                        <td>{{ row['id'] }}</td>
-                        <td>{{ row['tool_type'] }}</td>
-                        <td>{{ row['serial_number'] }}</td>
-                        <td>{{ row['size'] }}</td>
-                        <td>{{ row['thread_type'] }}</td>
-                        <td>{{ row['location'] }}</td>
-                        <td>{{ row['status'] }}</td>
-                        <td>
-                            {% if row['report_link'] %}
-                                <a href="{{ row['report_link'] }}" target="_blank">📎 مشاهده</a>
-                            {% else %}
-                                -
-                            {% endif %}
-                        </td>
-                        <td>{{ row['description'] or "" }}</td>
-                        <td>
-                            <!-- دکمه‌های کنار هم؛ ویرایش GET، حذف POST -->
-                            <form method="GET" action="/edit/{{ row['id'] }}" class="compact-form">
-                                <button type="submit" class="edit-btn">✏️ ویرایش</button>
-                            </form>
-                            <form method="POST" action="/delete/{{ row['id'] }}" class="compact-form" onsubmit="return confirm('آیا مطمئن هستید؟');">
-                                <button type="submit" class="delete-btn">🗑 حذف</button>
-                            </form>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+    <form action="/upload_excel" method="post" enctype="multipart/form-data">
+        <input type="file" name="excel_file" accept=".xlsx">
+        <button type="submit">بارگذاری</button>
+    </form>
 
-    </div>
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>نوع ابزار</th>
+            <th>شماره سریال</th>
+            <th>سایز</th>
+            <th>نوع رزوه</th>
+            <th>محل</th>
+            <th>وضعیت</th>
+            <th>گزارش</th>
+            <th>عملیات</th>
+            <th>توضیحات</th>
+        </tr>
+        {% for row in data %}
+        <tr>
+            <td>{{ row[0] }}</td>
+            <td>{{ row[1] }}</td>
+            <td>{{ row[2] }}</td>
+            <td>{{ row[3] }}</td>
+            <td>{{ row[4] }}</td>
+            <td>{{ row[5] }}</td>
+            <td>{{ row[6] }}</td>
+            <td>
+                {% if row[7] %}
+                    <a href="{{ url_for('uploaded_file', filename=row[7].split('/')[-1]) }}" target="_blank">مشاهده</a>
+                {% endif %}
+            </td>
+            <td class="action-btns">
+                <a href="/edit/{{ row[0] }}"><button>ویرایش</button></a>
+                <a href="/delete/{{ row[0] }}"><button>حذف</button></a>
+            </td>
+            <td>{{ row[8] or '' }}</td>
+        </tr>
+        {% endfor %}
+    </table>
 </body>
 </html>
