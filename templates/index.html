@@ -1,73 +1,114 @@
 <!DOCTYPE html>
 <html lang="fa">
 <head>
-    <meta charset="UTF-8">
-    <title>مدیریت ابزار در گردش</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<meta charset="UTF-8">
+<title>مدیریت ابزار در گردش</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<style>
+@font-face {
+    font-family: 'BNazanin';
+    src: url('{{ url_for('static', filename='fonts/BNazanin.ttf') }}');
+}
+body {
+    font-family: 'BNazanin', Arial, sans-serif;
+    background: #f0f4f8;
+    direction: rtl;
+    padding: 20px;
+}
+h1 { text-align: center; color: #003366; }
+table {
+    width: 100%; border-collapse: collapse; background: #fff;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+th, td {
+    border: 1px solid #ccc; padding: 8px; text-align: center;
+    font-weight: bold;
+}
+td.thread { font-size: 13px; }
+tr:nth-child(even) { background-color: #f9f9f9; }
+button {
+    background: linear-gradient(145deg, #007bff, #0056b3);
+    border: none; color: white; padding: 6px 10px;
+    border-radius: 6px; cursor: pointer;
+    box-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+}
+button:hover { background: linear-gradient(145deg, #0056b3, #007bff); }
+input, select {
+    padding: 6px; border: 1px solid #ccc; border-radius: 5px;
+    font-family: 'BNazanin';
+}
+</style>
 </head>
 <body>
-    <h1>مدیریت ابزار در گردش</h1>
+<h1>مدیریت ابزار در گردش</h1>
 
-    <div class="form-container">
-        <h3>ثبت ابزار جدید</h3>
-        <form action="/add" method="post" class="add-form">
-            <input type="text" name="tool_type" placeholder="نوع ابزار" required>
-            <input type="text" name="serial_number" placeholder="شماره سریال" required>
-            <input type="text" name="size" placeholder="سایز" required>
-            <input type="text" name="thread_type" placeholder="نوع رزوه" required>
-            <input type="text" name="location" placeholder="محل نگهداری" required>
-            <select name="status" required>
-                <option>Ready to Use</option>
-                <option>Need to Repair</option>
-                <option>Need to Sandblast</option>
-                <option>Scrap</option>
-                <option>Class 2</option>
-                <option>Need to Inspection</option>
-            </select>
-            <input type="text" name="report_link" placeholder="لینک گزارش">
-            <input type="text" name="description" placeholder="توضیحات">
-            <button type="submit" class="blue-btn">ثبت</button>
-        </form>
+<!-- فرم ثبت دستی -->
+<form method="POST" action="/add">
+    <label>نوع ابزار:</label>
+    <input type="text" name="tool_type" required>
+    <label>شماره سریال:</label>
+    <input type="text" name="serial_number" required>
+    <label>سایز:</label>
+    <input type="text" name="size" required>
+    <label>نوع رزوه:</label>
+    <input type="text" name="thread_type" required>
+    <label>محل:</label>
+    <input type="text" name="location" required>
+    <label>وضعیت:</label>
+    <select name="status" required>
+        <option>Ready to Use</option>
+        <option>Need to Repair</option>
+        <option>Need to Sandblast</option>
+        <option>Scrap</option>
+        <option>Class 2</option>
+        <option>Need to Inspection</option>
+    </select>
+    <label>توضیحات:</label>
+    <input type="text" name="description">
+    <button type="submit">ثبت ابزار</button>
+</form>
 
-        <h3>آپلود فایل Excel</h3>
-        <form action="/upload_excel" method="post" enctype="multipart/form-data">
-            <input type="file" name="file" accept=".xlsx,.xls" required>
-            <button type="submit" class="blue-btn">بارگذاری</button>
-        </form>
-    </div>
+<!-- فرم آپلود -->
+<form method="POST" action="/upload_excel" enctype="multipart/form-data" style="margin-top:15px;">
+    <input type="file" name="excel_file" accept=".xlsx" required>
+    <button type="submit">بارگذاری</button>
+</form>
 
-    <table>
-        <thead>
-            <tr>
-                <th>شناسه</th>
-                <th>نوع ابزار</th>
-                <th>شماره سریال</th>
-                <th>سایز</th>
-                <th>نوع رزوه</th>
-                <th>محل نگهداری</th>
-                <th>وضعیت</th>
-                <th>عملیات</th>
-                <th>شرح</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for row in data %}
-            <tr>
-                <td>{{ row[0] }}</td>
-                <td>{{ row[1] }}</td>
-                <td>{{ row[2] }}</td>
-                <td>{{ row[3] }}</td>
-                <td class="small-text">{{ row[4] }}</td>
-                <td>{{ row[5] }}</td>
-                <td>{{ row[6] }}</td>
-                <td>
-                    <a href="/edit/{{ row[0] }}" class="edit-btn">ویرایش</a>
-                    <a href="/delete/{{ row[0] }}" class="delete-btn">حذف</a>
-                </td>
-                <td>{{ row[8] }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<!-- فرم جستجو -->
+<form method="GET" action="/" style="margin-top:15px;">
+    <input type="text" name="query" placeholder="جستجو بر اساس نوع ابزار، وضعیت، محل، سایز..." value="{{ query }}">
+    <button type="submit">جستجو</button>
+</form>
+
+<!-- جدول -->
+<table>
+    <tr>
+        <th>شناسه</th>
+        <th>نوع ابزار</th>
+        <th>شماره سریال</th>
+        <th>سایز</th>
+        <th>نوع رزوه</th>
+        <th>محل نگهداری</th>
+        <th>وضعیت</th>
+        <th>عملیات</th>
+        <th>شرح</th>
+    </tr>
+    {% for row in data %}
+    <tr>
+        <td>{{ row[0] }}</td>
+        <td>{{ row[1] }}</td>
+        <td>{{ row[2] }}</td>
+        <td>{{ row[3] }}</td>
+        <td class="thread">{{ row[4] }}</td>
+        <td>{{ row[5] }}</td>
+        <td>{{ row[6] }}</td>
+        <td>
+            <a href="/edit/{{ row[0] }}"><button>ویرایش</button></a>
+            <a href="/delete/{{ row[0] }}"><button style="background:linear-gradient(145deg,#dc3545,#a71d2a);">حذف</button></a>
+        </td>
+        <td><input type="text" value="{{ row[8] or '' }}" readonly></td>
+    </tr>
+    {% endfor %}
+</table>
 </body>
 </html>
