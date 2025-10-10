@@ -1,75 +1,50 @@
 <!DOCTYPE html>
 <html lang="fa">
 <head>
-    <meta charset="UTF-8">
-    <title>ویرایش ابزار</title>
-    <style>
-        body {
-            font-family: "B Nazanin", Arial, sans-serif;
-            direction: rtl;
-            margin: 20px;
-            background: #f4f7fb;
-        }
-        h1 { text-align: center; font-weight: bold; }
-        form {
-            margin-bottom: 20px;
-            padding: 15px;
-            border: 1px solid #ccc;
-            border-radius: 12px;
-            background: #fff;
-        }
-        input, select, button {
-            margin: 5px;
-            padding: 8px;
-            border-radius: 8px;
-            border: 1px solid #aaa;
-        }
-        button {
-            background: linear-gradient(#2196F3, #0b7dda);
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 2px 2px 5px #999;
-            border: none;
-        }
-    </style>
+<meta charset="UTF-8">
+<title>ویرایش ابزار</title>
+<style>
+    body { font-family: Arial, sans-serif; background: #f4f7fb; margin: 20px; }
+    h1 { text-align: center; color: #333; }
+    form { padding: 15px; border: 1px solid #ccc; border-radius: 10px; background: white; width: 500px; margin: auto; }
+    label { display: block; margin-top: 10px; font-weight: bold; }
+    input, select, textarea { width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #aaa; }
+    .btn { background-color: #007bff; color: white; border: none; padding: 10px 15px; cursor: pointer; font-weight: bold; border-radius: 4px; box-shadow: 0px 4px 6px rgba(0,0,0,0.2); margin-top: 15px; }
+    .btn:hover { background-color: #0056b3; }
+</style>
 </head>
 <body>
-    <h1>ویرایش ابزار</h1>
-    <form method="POST" action="/edit/{{ item[0] }}">
-        <input type="text" name="tool_type" value="{{ item[1] }}" required>
-        <select name="tool_type_select">
-            <option value="{{ item[1] }}" selected>{{ item[1] }}</option>
-            <option value="Drill Pipe">Drill Pipe</option>
-            <option value="HW">HW</option>
-            <option value="Drill Collar">Drill Collar</option>
-            <option value="Cross Over">Cross Over</option>
-            <option value="Bit Sub">Bit Sub</option>
-            <option value="Short Sub">Short Sub</option>
-            <option value="Casing Scrapper">Casing Scrapper</option>
-            <option value="Uper I-BOP">Uper I-BOP</option>
-            <option value="Lower I-BOP">Lower I-BOP</option>
-            <option value="Double Box">Double Box</option>
-            <option value="Saver Sub">Saver Sub</option>
-            <option value="Safty Valve">Safty Valve</option>
-            <option value="PUP Joint">PUP Joint</option>
-            <option value="Fishing">Fishing</option>
-        </select>
-        <input type="text" name="serial_number" value="{{ item[2] }}" required>
-        <input type="text" name="size" value="{{ item[3] }}">
-        <input type="text" name="thread_type" value="{{ item[4] }}">
-        <input type="text" name="location" value="{{ item[5] }}">
-        <select name="status">
-            <option value="{{ item[6] }}" selected>{{ item[6] }}</option>
-            <option value="Ready to Use">Ready to Use</option>
-            <option value="Need to Repair">Need to Repair</option>
-            <option value="Need to Sandblast">Need to Sandblast</option>
-            <option value="Scrap">Scrap</option>
-            <option value="Class 2">Class 2</option>
-            <option value="Need to Inspection">Need to Inspection</option>
-        </select>
-        توضیحات: <input type="text" name="description" value="{{ item[8] }}">
-        <button type="submit">ذخیره تغییرات</button>
-    </form>
+<h1>ویرایش ابزار</h1>
+<form method="POST" action="/edit/{{ item[0] }}">
+    <label>نوع ابزار</label>
+    <input type="text" name="tool_type" value="{{ item[1] }}" required>
+
+    <label>شماره سریال</label>
+    <input type="text" name="serial_number" value="{{ item[2] }}" required style="direction:ltr;">
+
+    <label>سایز</label>
+    <input type="text" name="size" value="{{ item[3] }}" style="direction:ltr;">
+
+    <label>نوع رزوه</label>
+    <input type="text" name="thread_type" value="{{ item[4] }}">
+
+    <label>محل نگهداری</label>
+    <input type="text" name="location" value="{{ item[5] }}">
+
+    <label>وضعیت</label>
+    <select name="status">
+        <option value="Ready to Use" {% if item[6] == "Ready to Use" %}selected{% endif %}>Ready to Use</option>
+        <option value="Need to Repair" {% if item[6] == "Need to Repair" %}selected{% endif %}>Need to Repair</option>
+        <option value="Need to Sandblast" {% if item[6] == "Need to Sandblast" %}selected{% endif %}>Need to Sandblast</option>
+        <option value="Scrap" {% if item[6] == "Scrap" %}selected{% endif %}>Scrap</option>
+        <option value="Class 2" {% if item[6] == "Class 2" %}selected{% endif %}>Class 2</option>
+        <option value="Need to Inspection" {% if item[6] == "Need to Inspection" %}selected{% endif %}>Need to Inspection</option>
+    </select>
+
+    <label>شرح / توضیحات</label>
+    <textarea name="description">{{ item[8] }}</textarea>
+
+    <button type="submit" class="btn">ذخیره تغییرات</button>
+</form>
 </body>
 </html>
