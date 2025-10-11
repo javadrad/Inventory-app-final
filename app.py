@@ -79,11 +79,10 @@ def add():
 
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    # بررسی رکورد تکراری دستی
     c.execute("SELECT id FROM inventory WHERE serial_number=?", (serial_number,))
     if c.fetchone():
         conn.close()
-        return "<script>alert('شماره سریال تکراری است و ثبت نشد.'); window.location='/';</script>"
+        return "<script>alert('شماره سریال تکراری است'); window.location.href='/';</script>"
 
     c.execute('''INSERT INTO inventory
         (tool_type, serial_number, size, thread_type, location, status, report_link, description)
@@ -134,7 +133,7 @@ def delete(id):
 def upload_excel():
     excel_file = request.files.get("file")
     if not excel_file or not excel_file.filename.endswith(".xlsx"):
-        return "<script>alert('لطفاً فایل Excel معتبر انتخاب کنید.'); window.location='/';</script>"
+        return "<script>alert('لطفاً فایل Excel معتبر انتخاب کنید.'); window.location.href='/';</script>"
 
     wb = load_workbook(excel_file)
     sheet = wb.active
@@ -143,10 +142,8 @@ def upload_excel():
     skipped = []
 
     for idx, row in enumerate(sheet.iter_rows(values_only=True), start=1):
-        if idx == 1:
-            continue
-        if not row[0]:
-            continue
+        if idx == 1: continue
+        if not row[0]: continue
         tool_type, serial_number, size, thread_type, location, status = row[:6]
 
         # بررسی رکورد تکراری بر اساس شماره سریال
@@ -164,8 +161,7 @@ def upload_excel():
     conn.close()
 
     if skipped:
-        skipped_list = ", ".join(skipped)
-        return f"<script>alert('شماره سریال‌های تکراری نادیده گرفته شدند: {skipped_list}'); window.location='/';</script>"
+        return "<script>alert('شماره سریال‌های تکراری نادیده گرفته شدند: {}'); window.location.href='/';</script>".format(', '.join(skipped))
 
     return redirect("/")
 
@@ -178,6 +174,46 @@ def update_description(id):
     conn.commit()
     conn.close()
     return "OK"
+
+@app.route("/delete_selected", methods=["POST"])
+def delete_selected():
+    ids = request.form.getlist('ids')
+    if ids:
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+        c.executemany("DELETE FROM inventory WHERE id=?", [(i,) for i in ids])
+        conn.commit()
+        conn.close()
+    return '', 204
+
+@app.route("/delete_all_filtered", methods=["POST"])
+def delete_all_filtered():
+    tool_type = request.form.get("tool_type", "")
+    serial_number = request.form.get("serial_number", "")
+    status = request.form.get("status", "")
+    location = request.form.get("location", "")
+    query = "DELETE FROM inventory WHERE 1=1"
+    params = []
+
+    if tool_type:
+        query += " AND tool_type LIKE ?"
+        params.append(f"%{tool_type}%")
+    if serial_number:
+        query += " AND serial_number LIKE ?"
+        params.append(f"%{serial_number}%")
+    if status:
+        query += " AND status LIKE ?"
+        params.append(f"%{status}%")
+    if location:
+        query += " AND location LIKE ?"
+        params.append(f"%{location}%")
+
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute(query, params)
+    conn.commit()
+    conn.close()
+    return '', 204
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
