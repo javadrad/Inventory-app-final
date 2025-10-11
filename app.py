@@ -5,7 +5,6 @@ from openpyxl import load_workbook
 
 app = Flask(__name__)
 app.secret_key = "secret_key_for_flash"
-
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "inventory.db")
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "static", "reports")
@@ -13,20 +12,13 @@ UPLOAD_FOLDER = os.path.join(BASE_DIR, "static", "reports")
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
-# فیلتر تبدیل اعداد فارسی به انگلیسی
-def persian_to_english(value):
-    mapping = str.maketrans("۰۱۲۳۴۵۶۷۸۹", "0123456789")
-    return str(value).translate(mapping)
-
-app.jinja_env.filters['fa2en'] = persian_to_english
-
 def init_db():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS inventory (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         tool_type TEXT,
-        serial_number TEXT,
+        serial_number TEXT UNIQUE,
         size TEXT,
         thread_type TEXT,
         location TEXT,
@@ -86,16 +78,16 @@ def add():
         report_file.save(save_path)
         report_link = "/static/reports/" + report_file.filename
 
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
     try:
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
         c.execute('''INSERT INTO inventory
             (tool_type, serial_number, size, thread_type, location, status, report_link, description)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
             (tool_type, serial_number, size, thread_type, location, status, report_link, description))
         conn.commit()
     except sqlite3.IntegrityError:
-        flash(f"شماره سریال {serial_number} تکراری است و ثبت نشد.")
+        flash(f"شماره سریال {serial_number} تکراری است و ثبت نشد.", "error")
     finally:
         conn.close()
     return redirect("/")
@@ -105,7 +97,6 @@ def edit(id):
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
-
     if request.method == "POST":
         tool_type = request.form.get("tool_type")
         serial_number = request.form.get("serial_number")
@@ -114,7 +105,6 @@ def edit(id):
         location = request.form.get("location")
         status = request.form.get("status")
         description = request.form.get("description")
-
         c.execute('''UPDATE inventory SET
             tool_type=?, serial_number=?, size=?, thread_type=?, location=?, status=?, description=?
             WHERE id=?''',
@@ -122,7 +112,6 @@ def edit(id):
         conn.commit()
         conn.close()
         return redirect("/")
-
     c.execute("SELECT * FROM inventory WHERE id=?", (id,))
     item = c.fetchone()
     conn.close()
@@ -141,7 +130,7 @@ def delete(id):
 def upload_excel():
     excel_file = request.files.get("file")
     if not excel_file or not excel_file.filename.endswith(".xlsx"):
-        flash("لطفاً فایل Excel معتبر انتخاب کنید.")
+        flash("لطفاً فایل Excel معتبر انتخاب کنید.", "error")
         return redirect("/")
 
     wb = load_workbook(excel_file)
@@ -156,12 +145,10 @@ def upload_excel():
         if not row[0]:
             continue
         tool_type, serial_number, size, thread_type, location, status = row[:6]
-
         c.execute("SELECT id FROM inventory WHERE serial_number=?", (serial_number,))
         if c.fetchone():
             skipped.append(serial_number)
             continue
-
         c.execute('''INSERT INTO inventory
             (tool_type, serial_number, size, thread_type, location, status, report_link, description)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
@@ -169,10 +156,8 @@ def upload_excel():
 
     conn.commit()
     conn.close()
-
     if skipped:
-        flash(f"شماره سریال‌های تکراری نادیده گرفته شدند: {', '.join(skipped)}")
-
+        flash(f"شماره سریال‌های تکراری نادیده گرفته شدند: {', '.join(skipped)}", "error")
     return redirect("/")
 
 @app.route("/update_description/<int:id>", methods=["POST"])
