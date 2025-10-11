@@ -23,9 +23,9 @@ td input[type="text"] { width:95%; border:none; background:transparent; text-ali
 <body>
 <h1>مدیریت ابزار در گردش</h1>
 
-<form action="/upload_excel" method="post" enctype="multipart/form-data">
+<form action="/upload_excel" method="post" enctype="multipart/form-data" id="excelForm">
 <label>آپلود فایل Excel:</label>
-<input type="file" name="file" accept=".xlsx">
+<input type="file" name="file" accept=".xlsx" required>
 <button type="submit">بارگذاری</button>
 </form>
 
@@ -52,13 +52,13 @@ td input[type="text"] { width:95%; border:none; background:transparent; text-ali
 <input type="text" name="size" required>
 
 <label>نوع رزوه:</label>
-<input type="text" name="thread_type" style="width:120px;">
+<input type="text" name="thread_type" style="width:150px;">
 
 <label>محل نگهداری:</label>
-<input type="text" name="location">
+<input type="text" name="location" style="width:60px;">
 
 <label>وضعیت:</label>
-<select name="status" required>
+<select name="status" required style="width:100px;">
 <option value="">انتخاب کنید</option>
 <option>Ready to Use</option>
 <option>Need to Repair</option>
@@ -95,7 +95,7 @@ td input[type="text"] { width:95%; border:none; background:transparent; text-ali
 <input type="text" name="serial_number" placeholder="جستجو...">
 
 <label>وضعیت:</label>
-<select name="status">
+<select name="status" style="width:100px;">
 <option value="">همه</option>
 <option>Ready to Use</option>
 <option>Need to Repair</option>
@@ -106,7 +106,7 @@ td input[type="text"] { width:95%; border:none; background:transparent; text-ali
 </select>
 
 <label>محل نگهداری:</label>
-<input type="text" name="location" placeholder="جستجو...">
+<input type="text" name="location" placeholder="جستجو..." style="width:60px;">
 
 <button type="submit">جستجو</button>
 </form>
@@ -119,9 +119,9 @@ td input[type="text"] { width:95%; border:none; background:transparent; text-ali
 <th>نوع ابزار</th>
 <th style="width:80px;">شماره سریال</th>
 <th>سایز</th>
-<th style="width:120px;">نوع رزوه</th>
-<th>محل نگهداری</th>
-<th>وضعیت</th>
+<th style="width:150px;">نوع رزوه</th>
+<th style="width:60px;">محل نگهداری</th>
+<th style="width:100px;">وضعیت</th>
 <th style="width:120px;">عملیات</th>
 <th style="width:200px;">شرح / توضیحات</th>
 </tr>
@@ -129,11 +129,11 @@ td input[type="text"] { width:95%; border:none; background:transparent; text-ali
 <tbody>
 {% for tool in tools %}
 <tr>
-<td>{{ tool.id }}</td>
+<td>{{ tool.id|string }}</td>
 <td>{{ tool.tool_type }}</td>
-<td>{{ tool.serial_number }}</td>
-<td>{{ tool.size }}</td>
-<td style="width:120px; font-size:12px;">{{ tool.thread_type }}</td>
+<td>{{ tool.serial_number|string }}</td>
+<td>{{ tool.size|string }}</td>
+<td style="width:150px; font-size:12px;">{{ tool.thread_type }}</td>
 <td>{{ tool.location }}</td>
 <td>{{ tool.status }}</td>
 <td class="action-buttons">
@@ -149,6 +149,14 @@ td input[type="text"] { width:95%; border:none; background:transparent; text-ali
 </table>
 
 <script>
+// نمایش پیام رکوردهای تکراری به صورت پاپ‌آپ
+{% with messages = get_flashed_messages() %}
+{% if messages %}
+alert("{{ messages[0] }}");
+{% endif %}
+{% endwith %}
+
+// ذخیره خودکار شرح
 function updateDescription(id, value){
 fetch('/update_description/' + id, {
 method:'POST',
