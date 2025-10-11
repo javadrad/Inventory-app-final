@@ -13,6 +13,13 @@ UPLOAD_FOLDER = os.path.join(BASE_DIR, "static", "reports")
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
+# فیلتر تبدیل اعداد فارسی به انگلیسی
+def persian_to_english(value):
+    mapping = str.maketrans("۰۱۲۳۴۵۶۷۸۹", "0123456789")
+    return str(value).translate(mapping)
+
+app.jinja_env.filters['fa2en'] = persian_to_english
+
 def init_db():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
@@ -91,7 +98,6 @@ def add():
         flash(f"شماره سریال {serial_number} تکراری است و ثبت نشد.")
     finally:
         conn.close()
-
     return redirect("/")
 
 @app.route("/edit/<int:id>", methods=["GET", "POST"])
@@ -151,7 +157,6 @@ def upload_excel():
             continue
         tool_type, serial_number, size, thread_type, location, status = row[:6]
 
-        # بررسی رکورد تکراری بر اساس شماره سریال
         c.execute("SELECT id FROM inventory WHERE serial_number=?", (serial_number,))
         if c.fetchone():
             skipped.append(serial_number)
