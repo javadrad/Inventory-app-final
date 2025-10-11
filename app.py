@@ -1,8 +1,7 @@
 from flask import Flask, render_template, request, redirect, jsonify
 import sqlite3
-import pandas as pd
 import os
-
+from openpyxl import load_workbook
 app = Flask(__name__)
 DB_PATH = "tools_data.db"
 
