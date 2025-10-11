@@ -58,7 +58,6 @@ def index():
     c.execute(query, params)
     tools = c.fetchall()
     conn.close()
-
     return render_template("index.html", tools=tools)
 
 @app.route("/add", methods=["POST"])
@@ -86,7 +85,6 @@ def add():
         (tool_type, serial_number, size, thread_type, location, status, report_link, description))
     conn.commit()
     conn.close()
-
     return redirect("/")
 
 @app.route("/edit/<int:id>", methods=["GET", "POST"])
@@ -151,6 +149,16 @@ def upload_excel():
     conn.commit()
     conn.close()
     return redirect("/")
+
+@app.route("/update_description/<int:id>", methods=["POST"])
+def update_description(id):
+    description = request.form.get("description", "")
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("UPDATE inventory SET description=? WHERE id=?", (description, id))
+    conn.commit()
+    conn.close()
+    return "OK"
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
