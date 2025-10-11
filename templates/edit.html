@@ -5,53 +5,49 @@
     <title>ویرایش ابزار</title>
     <style>
         body {
-            font-family: "B Nazanin", Arial, sans-serif;
+            font-family: 'B Nazanin', sans-serif;
+            background: #f4f7fb;
             direction: rtl;
             margin: 20px;
-            background: #f4f7fb;
         }
-        h1 { text-align: center; font-weight: bold; }
         form {
-            background: #fff;
-            padding: 15px;
-            border-radius: 12px;
-            border: 1px solid #ccc;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
         input, select, button {
             margin: 5px;
             padding: 8px;
-            border-radius: 8px;
+            border-radius: 6px;
             border: 1px solid #aaa;
-            font-family: "B Nazanin";
+            font-family: 'B Nazanin';
         }
         button {
-            background: linear-gradient(#2196F3, #0b7dda);
+            background: linear-gradient(#007BFF, #0056b3);
             color: white;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 2px 2px 6px #888;
             border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
-    <h1>ویرایش ابزار</h1>
-    <form method="POST" action="/edit/{{ item[0] }}">
-        <input type="text" name="tool_type" value="{{ item[1] }}">
-        <input type="text" name="serial_number" value="{{ item[2] }}">
-        <input type="text" name="size" value="{{ item[3] }}">
-        <input type="text" name="thread_type" value="{{ item[4] }}">
-        <input type="text" name="location" value="{{ item[5] }}">
+    <h2>ویرایش ابزار</h2>
+    <form method="POST">
+        <input type="text" name="tool_type" value="{{ item['tool_type'] }}" required>
+        <input type="text" name="serial_number" value="{{ item['serial_number'] }}" required>
+        <input type="text" name="size" value="{{ item['size'] }}">
+        <input type="text" name="thread_type" value="{{ item['thread_type'] }}">
+        <input type="text" name="location" value="{{ item['location'] }}">
         <select name="status">
-            <option selected>{{ item[6] }}</option>
+            <option value="{{ item['status'] }}" selected>{{ item['status'] }}</option>
             <option>Ready to Use</option>
             <option>Need to Repair</option>
-            <option>Need to Sandblast</option>
             <option>Scrap</option>
-            <option>Class 2</option>
-            <option>Need to Inspection</option>
         </select>
-        توضیحات: <input type="text" name="description" value="{{ item[8] }}">
+        <input type="text" name="description" value="{{ item['description'] }}">
         <button type="submit">💾 ذخیره تغییرات</button>
     </form>
 </body>
