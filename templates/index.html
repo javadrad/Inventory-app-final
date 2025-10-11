@@ -18,14 +18,31 @@ td { font-weight:bold; }
 td input[type="text"] { width:95%; border:none; background:transparent; text-align:center; font-family:'B Nazanin'; font-size:13px; }
 .action-buttons button { margin:2px; padding:5px 10px; }
 .search-box { margin:15px 0; padding:10px; background:#eef2f9; border-radius:10px; box-shadow: inset 0 0 6px rgba(0,0,0,0.1); }
+
+/* تغییر عرض ستون‌ها */
+th.tool_type { width: 60px; }
+th.thread_type { width: 180px; }
+th.location { width: 80px; }
+th.status { width: 90px; }
+
+td.tool_type { width: 60px; }
+td.thread_type { width: 180px; }
+td.location { width: 80px; }
+td.status { width: 90px; }
 </style>
 </head>
 <body>
 <h1>مدیریت ابزار در گردش</h1>
 
-<form action="/upload_excel" method="post" enctype="multipart/form-data" id="excelForm">
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <script>alert("{{ messages[0] }}");</script>
+  {% endif %}
+{% endwith %}
+
+<form action="/upload_excel" method="post" enctype="multipart/form-data">
 <label>آپلود فایل Excel:</label>
-<input type="file" name="file" accept=".xlsx" required>
+<input type="file" name="file" accept=".xlsx">
 <button type="submit">بارگذاری</button>
 </form>
 
@@ -46,19 +63,19 @@ td input[type="text"] { width:95%; border:none; background:transparent; text-ali
 </select>
 
 <label>شماره سریال:</label>
-<input type="text" name="serial_number" required style="width:80px;">
+<input type="text" name="serial_number" required>
 
 <label>سایز:</label>
 <input type="text" name="size" required>
 
 <label>نوع رزوه:</label>
-<input type="text" name="thread_type" style="width:150px;">
+<input type="text" name="thread_type">
 
 <label>محل نگهداری:</label>
-<input type="text" name="location" style="width:60px;">
+<input type="text" name="location">
 
 <label>وضعیت:</label>
-<select name="status" required style="width:100px;">
+<select name="status" required>
 <option value="">انتخاب کنید</option>
 <option>Ready to Use</option>
 <option>Need to Repair</option>
@@ -95,7 +112,7 @@ td input[type="text"] { width:95%; border:none; background:transparent; text-ali
 <input type="text" name="serial_number" placeholder="جستجو...">
 
 <label>وضعیت:</label>
-<select name="status" style="width:100px;">
+<select name="status">
 <option value="">همه</option>
 <option>Ready to Use</option>
 <option>Need to Repair</option>
@@ -106,7 +123,7 @@ td input[type="text"] { width:95%; border:none; background:transparent; text-ali
 </select>
 
 <label>محل نگهداری:</label>
-<input type="text" name="location" placeholder="جستجو..." style="width:60px;">
+<input type="text" name="location" placeholder="جستجو...">
 
 <button type="submit">جستجو</button>
 </form>
@@ -116,12 +133,12 @@ td input[type="text"] { width:95%; border:none; background:transparent; text-ali
 <thead>
 <tr>
 <th>ID</th>
-<th>نوع ابزار</th>
-<th style="width:80px;">شماره سریال</th>
+<th class="tool_type">نوع ابزار</th>
+<th>شماره سریال</th>
 <th>سایز</th>
-<th style="width:150px;">نوع رزوه</th>
-<th style="width:60px;">محل نگهداری</th>
-<th style="width:100px;">وضعیت</th>
+<th class="thread_type">نوع رزوه</th>
+<th class="location">محل نگهداری</th>
+<th class="status">وضعیت</th>
 <th style="width:120px;">عملیات</th>
 <th style="width:200px;">شرح / توضیحات</th>
 </tr>
@@ -129,13 +146,13 @@ td input[type="text"] { width:95%; border:none; background:transparent; text-ali
 <tbody>
 {% for tool in tools %}
 <tr>
-<td>{{ tool.id|string }}</td>
-<td>{{ tool.tool_type }}</td>
-<td>{{ tool.serial_number|string }}</td>
-<td>{{ tool.size|string }}</td>
-<td style="width:150px; font-size:12px;">{{ tool.thread_type }}</td>
-<td>{{ tool.location }}</td>
-<td>{{ tool.status }}</td>
+<td class="number">{{ tool.id|fa2en }}</td>
+<td class="tool_type">{{ tool.tool_type }}</td>
+<td class="number">{{ tool.serial_number|fa2en }}</td>
+<td class="number">{{ tool.size|fa2en }}</td>
+<td class="thread_type">{{ tool.thread_type }}</td>
+<td class="location">{{ tool.location }}</td>
+<td class="status">{{ tool.status }}</td>
 <td class="action-buttons">
 <a href="/edit/{{ tool.id }}"><button>✏️ ویرایش</button></a>
 <a href="/delete/{{ tool.id }}" onclick="return confirm('آیا مطمئن هستید؟')"><button>🗑️ حذف</button></a>
@@ -149,14 +166,6 @@ td input[type="text"] { width:95%; border:none; background:transparent; text-ali
 </table>
 
 <script>
-// نمایش پیام رکوردهای تکراری به صورت پاپ‌آپ
-{% with messages = get_flashed_messages() %}
-{% if messages %}
-alert("{{ messages[0] }}");
-{% endif %}
-{% endwith %}
-
-// ذخیره خودکار شرح
 function updateDescription(id, value){
 fetch('/update_description/' + id, {
 method:'POST',
