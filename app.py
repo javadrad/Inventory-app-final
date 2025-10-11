@@ -1,164 +1,151 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, jsonify
 import sqlite3
+import pandas as pd
 import os
-from openpyxl import load_workbook
 
 app = Flask(__name__)
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, "inventory.db")
-UPLOAD_FOLDER = os.path.join(BASE_DIR, "static", "reports")
+DB_PATH = "tools_data.db"
 
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
-
+# ایجاد دیتابیس در صورت عدم وجود
 def init_db():
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS inventory (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        tool_type TEXT,
-        serial_number TEXT,
-        size TEXT,
-        thread_type TEXT,
-        location TEXT,
-        status TEXT,
-        report_link TEXT,
-        description TEXT
-    )''')
-    conn.commit()
-    conn.close()
+    with sqlite3.connect(DB_PATH) as conn:
+        c = conn.cursor()
+        c.execute('''CREATE TABLE IF NOT EXISTS inventory_data (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            tool_type TEXT,
+            serial_number TEXT UNIQUE,
+            size TEXT,
+            thread_type TEXT,
+            location TEXT,
+            status TEXT,
+            report_link TEXT,
+            description TEXT
+        )''')
+        conn.commit()
 
 init_db()
 
-@app.route("/", methods=["GET"])
+# صفحه اصلی
+@app.route("/")
 def index():
-    query = "SELECT * FROM inventory WHERE 1=1"
-    params = []
-    tool_type = request.args.get("tool_type", "")
-    serial_number = request.args.get("serial_number", "")
-    status = request.args.get("status", "")
-    location = request.args.get("location", "")
-
-    if tool_type:
-        query += " AND tool_type LIKE ?"
-        params.append(f"%{tool_type}%")
-    if serial_number:
-        query += " AND serial_number LIKE ?"
-        params.append(f"%{serial_number}%")
-    if status:
-        query += " AND status LIKE ?"
-        params.append(f"%{status}%")
-    if location:
-        query += " AND location LIKE ?"
-        params.append(f"%{location}%")
-
     conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
     c = conn.cursor()
-    c.execute(query, params)
-    tools = c.fetchall()
+    c.execute("SELECT * FROM inventory_data")
+    data = c.fetchall()
     conn.close()
-    return render_template("index.html", tools=tools)
+    return render_template("index.html", data=data)
 
+# افزودن ابزار جدید به صورت دستی
 @app.route("/add", methods=["POST"])
-def add():
-    tool_type = request.form.get("tool_type")
-    serial_number = request.form.get("serial_number")
-    size = request.form.get("size")
-    thread_type = request.form.get("thread_type")
-    location = request.form.get("location")
-    status = request.form.get("status")
-    description = request.form.get("description")
-    report_file = request.files.get("report_file")
+def add_tool():
+    data = (
+        request.form["tool_type"],
+        request.form["serial_number"],
+        request.form["size"],
+        request.form["thread_type"],
+        request.form["location"],
+        request.form["status"],
+        request.form["report_link"],
+        request.form.get("description", "")
+    )
 
-    report_link = ""
-    if report_file and report_file.filename:
-        save_path = os.path.join(UPLOAD_FOLDER, report_file.filename)
-        report_file.save(save_path)
-        report_link = "/static/reports/" + report_file.filename
-
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute('''INSERT INTO inventory
-        (tool_type, serial_number, size, thread_type, location, status, report_link, description)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
-        (tool_type, serial_number, size, thread_type, location, status, report_link, description))
-    conn.commit()
-    conn.close()
-    return redirect("/")
-
-@app.route("/edit/<int:id>", methods=["GET", "POST"])
-def edit(id):
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    c = conn.cursor()
-
-    if request.method == "POST":
-        tool_type = request.form.get("tool_type")
-        serial_number = request.form.get("serial_number")
-        size = request.form.get("size")
-        thread_type = request.form.get("thread_type")
-        location = request.form.get("location")
-        status = request.form.get("status")
-        description = request.form.get("description")
-
-        c.execute('''UPDATE inventory SET
-            tool_type=?, serial_number=?, size=?, thread_type=?, location=?, status=?, description=?
-            WHERE id=?''',
-            (tool_type, serial_number, size, thread_type, location, status, description, id))
+    with sqlite3.connect(DB_PATH) as conn:
+        c = conn.cursor()
+        # جلوگیری از ثبت تکراری بر اساس شماره سریال
+        c.execute("SELECT COUNT(*) FROM inventory_data WHERE serial_number=?", (data[1],))
+        if c.fetchone()[0] > 0:
+            return jsonify({"success": False, "message": "رکوردی با این شماره سریال قبلاً ثبت شده است."})
+        c.execute("INSERT INTO inventory_data (tool_type, serial_number, size, thread_type, location, status, report_link, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", data)
         conn.commit()
-        conn.close()
-        return redirect("/")
-
-    c.execute("SELECT * FROM inventory WHERE id=?", (id,))
-    item = c.fetchone()
-    conn.close()
-    return render_template("edit.html", item=item)
-
-@app.route("/delete/<int:id>")
-def delete(id):
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute("DELETE FROM inventory WHERE id=?", (id,))
-    conn.commit()
-    conn.close()
     return redirect("/")
 
+# آپلود فایل Excel و وارد کردن داده‌ها
 @app.route("/upload_excel", methods=["POST"])
 def upload_excel():
-    excel_file = request.files.get("file")
-    if not excel_file or not excel_file.filename.endswith(".xlsx"):
-        return "لطفاً فایل Excel معتبر انتخاب کنید."
+    file = request.files["file"]
+    if not file:
+        return redirect("/")
 
-    wb = load_workbook(excel_file)
-    sheet = wb.active
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
+    df = pd.read_excel(file)
+    df.columns = [col.strip().lower().replace(" ", "_") for col in df.columns]
 
-    for idx, row in enumerate(sheet.iter_rows(values_only=True), start=1):
-        if idx == 1:
-            continue
-        if not row[0]:
-            continue
-        tool_type, serial_number, size, thread_type, location, status = row[:6]
-        c.execute('''INSERT INTO inventory
-            (tool_type, serial_number, size, thread_type, location, status, report_link, description)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
-            (tool_type, serial_number, size, thread_type, location, status, "", ""))
+    required_cols = {"tool_type", "serial_number", "size", "thread_type", "location", "status", "report_link", "description"}
+    for col in required_cols:
+        if col not in df.columns:
+            df[col] = ""
 
-    conn.commit()
-    conn.close()
+    with sqlite3.connect(DB_PATH) as conn:
+        c = conn.cursor()
+        for _, row in df.iterrows():
+            serial = str(row["serial_number"]).strip()
+            c.execute("SELECT COUNT(*) FROM inventory_data WHERE serial_number=?", (serial,))
+            if c.fetchone()[0] == 0:  # فقط اگر تکراری نبود
+                c.execute(
+                    "INSERT INTO inventory_data (tool_type, serial_number, size, thread_type, location, status, report_link, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                    (
+                        row["tool_type"], serial, row["size"], row["thread_type"],
+                        row["location"], row["status"], row["report_link"], row["description"]
+                    )
+                )
+        conn.commit()
     return redirect("/")
 
-@app.route("/update_description/<int:id>", methods=["POST"])
-def update_description(id):
-    description = request.form.get("description", "")
+# حذف ابزار موردی
+@app.route("/delete/<int:item_id>", methods=["POST"])
+def delete_item(item_id):
+    with sqlite3.connect(DB_PATH) as conn:
+        c = conn.cursor()
+        c.execute("DELETE FROM inventory_data WHERE id=?", (item_id,))
+        conn.commit()
+    return jsonify({"success": True})
+
+# حذف همه ابزارها (فیلتر شده یا کل دیتابیس)
+@app.route("/delete_all", methods=["POST"])
+def delete_all():
+    with sqlite3.connect(DB_PATH) as conn:
+        c = conn.cursor()
+        c.execute("DELETE FROM inventory_data")
+        conn.commit()
+    return jsonify({"success": True})
+
+# جستجو
+@app.route("/search", methods=["GET"])
+def search():
+    filters = []
+    params = []
+    if request.args.get("tool_type"):
+        filters.append("tool_type=?")
+        params.append(request.args["tool_type"])
+    if request.args.get("serial_number"):
+        filters.append("serial_number LIKE ?")
+        params.append(f"%{request.args['serial_number']}%")
+    if request.args.get("status"):
+        filters.append("status=?")
+        params.append(request.args["status"])
+    if request.args.get("location"):
+        filters.append("location LIKE ?")
+        params.append(f"%{request.args['location']}%")
+
+    query = "SELECT * FROM inventory_data"
+    if filters:
+        query += " WHERE " + " AND ".join(filters)
+
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute("UPDATE inventory SET description=? WHERE id=?", (description, id))
-    conn.commit()
+    c.execute(query, params)
+    data = c.fetchall()
     conn.close()
-    return "OK"
+    return jsonify(data)
+
+# ذخیره خودکار توضیحات
+@app.route("/update_description/<int:item_id>", methods=["POST"])
+def update_description(item_id):
+    desc = request.json.get("description", "")
+    with sqlite3.connect(DB_PATH) as conn:
+        c = conn.cursor()
+        c.execute("UPDATE inventory_data SET description=? WHERE id=?", (desc, item_id))
+        conn.commit()
+    return jsonify({"success": True})
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    app.run(debug=True)
