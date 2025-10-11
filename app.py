@@ -34,72 +34,79 @@ init_db()
 def index():
     query = "SELECT * FROM inventory WHERE 1=1"
     params = []
+    tool_type = request.args.get("tool_type", "")
+    serial_number = request.args.get("serial_number", "")
+    status = request.args.get("status", "")
+    location = request.args.get("location", "")
 
-    filters = {
-        "tool_type": request.args.get("tool_type", "").strip(),
-        "status": request.args.get("status", "").strip(),
-        "location": request.args.get("location", "").strip(),
-        "size": request.args.get("size", "").strip(),
-        "thread_type": request.args.get("thread_type", "").strip()
-    }
-
-    for key, value in filters.items():
-        if value:
-            query += f" AND {key} LIKE ?"
-            params.append(f"%{value}%")
+    if tool_type:
+        query += " AND tool_type LIKE ?"
+        params.append(f"%{tool_type}%")
+    if serial_number:
+        query += " AND serial_number LIKE ?"
+        params.append(f"%{serial_number}%")
+    if status:
+        query += " AND status LIKE ?"
+        params.append(f"%{status}%")
+    if location:
+        query += " AND location LIKE ?"
+        params.append(f"%{location}%")
 
     conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
     c = conn.cursor()
     c.execute(query, params)
-    items = c.fetchall()
+    tools = c.fetchall()
     conn.close()
 
-    return render_template("index.html", items=items, filters=filters)
+    return render_template("index.html", tools=tools)
 
 @app.route("/add", methods=["POST"])
 def add():
-    tool_type = request.form.get("tool_type_select") or request.form.get("tool_type")
+    tool_type = request.form.get("tool_type")
     serial_number = request.form.get("serial_number")
     size = request.form.get("size")
     thread_type = request.form.get("thread_type")
     location = request.form.get("location")
     status = request.form.get("status")
-    description = request.form.get("description", "")
+    description = request.form.get("description")
     report_file = request.files.get("report_file")
 
     report_link = ""
     if report_file and report_file.filename:
-        report_path = os.path.join(UPLOAD_FOLDER, report_file.filename)
-        report_file.save(report_path)
+        save_path = os.path.join(UPLOAD_FOLDER, report_file.filename)
+        report_file.save(save_path)
         report_link = "/static/reports/" + report_file.filename
 
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute('''INSERT INTO inventory 
+    c.execute('''INSERT INTO inventory
         (tool_type, serial_number, size, thread_type, location, status, report_link, description)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
         (tool_type, serial_number, size, thread_type, location, status, report_link, description))
     conn.commit()
     conn.close()
+
     return redirect("/")
 
 @app.route("/edit/<int:id>", methods=["GET", "POST"])
 def edit(id):
     conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
     c = conn.cursor()
 
     if request.method == "POST":
-        tool_type = request.form.get("tool_type_select") or request.form.get("tool_type")
+        tool_type = request.form.get("tool_type")
         serial_number = request.form.get("serial_number")
         size = request.form.get("size")
         thread_type = request.form.get("thread_type")
         location = request.form.get("location")
         status = request.form.get("status")
-        description = request.form.get("description", "")
+        description = request.form.get("description")
 
-        c.execute('''UPDATE inventory SET 
-            tool_type=?, serial_number=?, size=?, thread_type=?, 
-            location=?, status=?, description=? WHERE id=?''',
+        c.execute('''UPDATE inventory SET
+            tool_type=?, serial_number=?, size=?, thread_type=?, location=?, status=?, description=?
+            WHERE id=?''',
             (tool_type, serial_number, size, thread_type, location, status, description, id))
         conn.commit()
         conn.close()
@@ -121,23 +128,22 @@ def delete(id):
 
 @app.route("/upload_excel", methods=["POST"])
 def upload_excel():
-    excel_file = request.files.get("excel_file")
+    excel_file = request.files.get("file")
     if not excel_file or not excel_file.filename.endswith(".xlsx"):
-        return "لطفاً فایل XLSX معتبر انتخاب کنید", 400
+        return "لطفاً فایل Excel معتبر انتخاب کنید."
 
     wb = load_workbook(excel_file)
     sheet = wb.active
-
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
     for idx, row in enumerate(sheet.iter_rows(values_only=True), start=1):
         if idx == 1:
             continue
-        if len(row) < 6:
+        if not row[0]:
             continue
         tool_type, serial_number, size, thread_type, location, status = row[:6]
-        c.execute('''INSERT INTO inventory 
+        c.execute('''INSERT INTO inventory
             (tool_type, serial_number, size, thread_type, location, status, report_link, description)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
             (tool_type, serial_number, size, thread_type, location, status, "", ""))
@@ -147,4 +153,4 @@ def upload_excel():
     return redirect("/")
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(debug=True, host="0.0.0.0", port=5000)
