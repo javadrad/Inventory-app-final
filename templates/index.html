@@ -11,19 +11,13 @@ label { margin: 0 5px; font-weight: bold; }
 input, select { padding: 5px 8px; margin:3px; border-radius:5px; border:1px solid #bbb; font-family:'B Nazanin'; font-size:14px; }
 button { background: linear-gradient(#007BFF,#0056b3); color:white; border:none; border-radius:8px; padding:7px 15px; cursor:pointer; font-size:14px; box-shadow:0 3px 5px rgba(0,0,0,0.3); transition:0.2s; }
 button:hover { transform: translateY(-1px); background: linear-gradient(#3399ff,#0066cc); }
-table { width:100%; border-collapse:collapse; background:white; box-shadow:0 0 10px rgba(0,0,0,0.1); font-size:13px; direction:ltr; }
+table { width:100%; border-collapse:collapse; background:white; box-shadow:0 0 10px rgba(0,0,0,0.1); font-size:12px; }
 th, td { border:1px solid #ccc; padding:4px 6px; text-align:center; }
 th { background:#007BFF; color:white; }
 td { font-weight:bold; }
-td input[type="text"] { width:95%; border:none; background:transparent; text-align:center; font-family:'B Nazanin'; font-size:13px; }
+td input[type="text"] { width:95%; border:none; background:transparent; text-align:center; font-family:'B Nazanin'; font-size:12px; }
 .action-buttons button { margin:2px; padding:5px 10px; }
 .search-box { margin:15px 0; padding:10px; background:#eef2f9; border-radius:10px; box-shadow: inset 0 0 6px rgba(0,0,0,0.1); }
-
-/* اصلاح عرض ستون‌ها */
-th.tool_type, td.tool_type { width:60px; } /* کاهش نوع ابزار */
-th.thread_type, td.thread_type { width:180px; } /* افزایش نوع رزوه */
-th.location, td.location { width:70px; } /* کاهش محل نگهداری */
-th.status, td.status { width:80px; } /* کاهش وضعیت */
 </style>
 </head>
 <body>
@@ -52,13 +46,13 @@ th.status, td.status { width:80px; } /* کاهش وضعیت */
 </select>
 
 <label>شماره سریال:</label>
-<input type="text" name="serial_number" required>
+<input type="text" name="serial_number" required style="width:80px;">
 
 <label>سایز:</label>
 <input type="text" name="size" required>
 
 <label>نوع رزوه:</label>
-<input type="text" name="thread_type">
+<input type="text" name="thread_type" style="width:160px;">
 
 <label>محل نگهداری:</label>
 <input type="text" name="location">
@@ -115,6 +109,8 @@ th.status, td.status { width:80px; } /* کاهش وضعیت */
 <input type="text" name="location" placeholder="جستجو...">
 
 <button type="submit">جستجو</button>
+<button type="button" onclick="deleteSelected()">حذف موردی</button>
+<button type="button" onclick="deleteAllFiltered()">حذف همه فیلتر شده‌ها</button>
 </form>
 </div>
 
@@ -122,12 +118,12 @@ th.status, td.status { width:80px; } /* کاهش وضعیت */
 <thead>
 <tr>
 <th>ID</th>
-<th class="tool_type">نوع ابزار</th>
-<th>شماره سریال</th>
+<th style="width:60px;">نوع ابزار</th>
+<th style="width:100px;">شماره سریال</th>
 <th>سایز</th>
-<th class="thread_type">نوع رزوه</th>
-<th class="location">محل نگهداری</th>
-<th class="status">وضعیت</th>
+<th style="width:160px;">نوع رزوه</th>
+<th style="width:80px;">محل نگهداری</th>
+<th style="width:80px;">وضعیت</th>
 <th style="width:120px;">عملیات</th>
 <th style="width:200px;">شرح / توضیحات</th>
 </tr>
@@ -136,13 +132,14 @@ th.status, td.status { width:80px; } /* کاهش وضعیت */
 {% for tool in tools %}
 <tr>
 <td>{{ tool.id|string }}</td>
-<td class="tool_type">{{ tool.tool_type }}</td>
-<td>{{ tool.serial_number|string }}</td>
+<td>{{ tool.tool_type }}</td>
+<td>{{ tool.serial_number }}</td>
 <td>{{ tool.size|string }}</td>
-<td class="thread_type">{{ tool.thread_type }}</td>
-<td class="location">{{ tool.location }}</td>
-<td class="status">{{ tool.status }}</td>
+<td>{{ tool.thread_type }}</td>
+<td>{{ tool.location }}</td>
+<td>{{ tool.status }}</td>
 <td class="action-buttons">
+<input type="checkbox" class="delete-checkbox" value="{{ tool.id }}">
 <a href="/edit/{{ tool.id }}"><button>✏️ ویرایش</button></a>
 <a href="/delete/{{ tool.id }}" onclick="return confirm('آیا مطمئن هستید؟')"><button>🗑️ حذف</button></a>
 </td>
@@ -161,6 +158,28 @@ method:'POST',
 headers:{'Content-Type':'application/x-www-form-urlencoded'},
 body:'description=' + encodeURIComponent(value)
 }).then(res=>res.text()).then(console.log);
+}
+
+function deleteSelected(){
+let ids = Array.from(document.querySelectorAll('.delete-checkbox:checked')).map(cb => cb.value);
+if(ids.length === 0){ alert('ابتدا یک یا چند ابزار را انتخاب کنید'); return; }
+if(confirm('آیا از حذف موردی اطمینان دارید؟')){
+fetch('/delete_selected', {
+method:'POST',
+headers:{'Content-Type':'application/x-www-form-urlencoded'},
+body:ids.map(id=>'ids='+id).join('&')
+}).then(()=> location.reload());
+}
+}
+
+function deleteAllFiltered(){
+if(confirm('آیا از حذف همه فیلتر شده‌ها اطمینان دارید؟')){
+let params = new URLSearchParams(new FormData(document.querySelector('.search-box form')));
+fetch('/delete_all_filtered', {
+method:'POST',
+body: params
+}).then(()=> location.reload());
+}
 }
 </script>
 </body>
