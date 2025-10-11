@@ -19,7 +19,7 @@ def init_db():
     c.execute('''CREATE TABLE IF NOT EXISTS inventory (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         tool_type TEXT,
-        serial_number TEXT UNIQUE,
+        serial_number TEXT,
         size TEXT,
         thread_type TEXT,
         location TEXT,
@@ -79,106 +79,12 @@ def add():
         report_file.save(save_path)
         report_link = "/static/reports/" + report_file.filename
 
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        c = conn.cursor()
-        c.execute('''INSERT INTO inventory
-            (tool_type, serial_number, size, thread_type, location, status, report_link, description)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
-            (tool_type, serial_number, size, thread_type, location, status, report_link, description))
-        conn.commit()
-    except sqlite3.IntegrityError:
-        flash(f"شماره سریال {serial_number} تکراری است و ثبت نشد.")
-    finally:
-        conn.close()
-
-    return redirect("/")
-
-@app.route("/upload_excel", methods=["POST"])
-def upload_excel():
-    excel_file = request.files.get("file")
-    if not excel_file or not excel_file.filename.endswith(".xlsx"):
-        flash("لطفاً فایل Excel معتبر انتخاب کنید.")
-        return redirect("/")
-
-    wb = load_workbook(excel_file)
-    sheet = wb.active
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    skipped = []
-
-    for idx, row in enumerate(sheet.iter_rows(values_only=True), start=1):
-        if idx == 1:  # ستون‌های عنوان را رد کن
-            continue
-        if not row[0]:
-            continue
-        tool_type, serial_number, size, thread_type, location, status = row[:6]
-
-        # جلوگیری از رکورد تکراری
-        c.execute("SELECT id FROM inventory WHERE serial_number=?", (serial_number,))
-        if c.fetchone():
-            skipped.append(serial_number)
-            continue
-
-        c.execute('''INSERT INTO inventory
-            (tool_type, serial_number, size, thread_type, location, status, report_link, description)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
-            (tool_type, serial_number, size, thread_type, location, status, "", ""))
-
-    conn.commit()
-    conn.close()
-
-    if skipped:
-        flash(f"شماره سریال‌های تکراری نادیده گرفته شدند: {', '.join(skipped)}")
-
-    return redirect("/")
-
-@app.route("/update_description/<int:id>", methods=["POST"])
-def update_description(id):
-    description = request.form.get("description", "")
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute("UPDATE inventory SET description=? WHERE id=?", (description, id))
-    conn.commit()
-    conn.close()
-    return "OK"
-
-@app.route("/delete_selected", methods=["POST"])
-def delete_selected():
-    ids = request.form.getlist("ids")
-    if ids:
-        conn = sqlite3.connect(DB_PATH)
-        c = conn.cursor()
-        c.executemany("DELETE FROM inventory WHERE id=?", [(i,) for i in ids])
-        conn.commit()
-        conn.close()
-    return redirect("/")
-
-@app.route("/delete_all_filtered", methods=["POST"])
-def delete_all_filtered():
-    tool_type = request.form.get("tool_type", "")
-    serial_number = request.form.get("serial_number", "")
-    status = request.form.get("status", "")
-    location = request.form.get("location", "")
-
-    query = "DELETE FROM inventory WHERE 1=1"
-    params = []
-    if tool_type:
-        query += " AND tool_type LIKE ?"
-        params.append(f"%{tool_type}%")
-    if serial_number:
-        query += " AND serial_number LIKE ?"
-        params.append(f"%{serial_number}%")
-    if status:
-        query += " AND status LIKE ?"
-        params.append(f"%{status}%")
-    if location:
-        query += " AND location LIKE ?"
-        params.append(f"%{location}%")
-
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute(query, params)
+    c.execute('''INSERT INTO inventory
+        (tool_type, serial_number, size, thread_type, location, status, report_link, description)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
+        (tool_type, serial_number, size, thread_type, location, status, report_link, description))
     conn.commit()
     conn.close()
     return redirect("/")
@@ -219,6 +125,55 @@ def delete(id):
     conn.commit()
     conn.close()
     return redirect("/")
+
+@app.route("/upload_excel", methods=["POST"])
+def upload_excel():
+    excel_file = request.files.get("file")
+    if not excel_file or not excel_file.filename.endswith(".xlsx"):
+        flash("لطفاً فایل Excel معتبر انتخاب کنید.")
+        return redirect("/")
+
+    wb = load_workbook(excel_file)
+    sheet = wb.active
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    skipped = []  # شماره سریال‌های تکراری
+
+    for idx, row in enumerate(sheet.iter_rows(values_only=True), start=1):
+        if idx == 1:
+            continue
+        if not row[0]:
+            continue
+        tool_type, serial_number, size, thread_type, location, status = row[:6]
+
+        # بررسی رکورد تکراری
+        c.execute("SELECT id FROM inventory WHERE serial_number=?", (serial_number,))
+        if c.fetchone():
+            skipped.append(serial_number)
+            continue
+
+        c.execute('''INSERT INTO inventory
+            (tool_type, serial_number, size, thread_type, location, status, report_link, description)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
+            (tool_type, serial_number, size, thread_type, location, status, "", ""))
+
+    conn.commit()
+    conn.close()
+
+    if skipped:
+        flash(f"رکوردهای دارای شماره سریال تکراری نادیده گرفته شدند: {', '.join(skipped)}")
+
+    return redirect("/")
+
+@app.route("/update_description/<int:id>", methods=["POST"])
+def update_description(id):
+    description = request.form.get("description", "")
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("UPDATE inventory SET description=? WHERE id=?", (description, id))
+    conn.commit()
+    conn.close()
+    return "OK"
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
