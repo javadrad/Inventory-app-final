@@ -11,17 +11,13 @@ label { margin: 0 5px; font-weight: bold; }
 input, select { padding: 5px 8px; margin:3px; border-radius:5px; border:1px solid #bbb; font-family:'B Nazanin'; font-size:14px; }
 button { background: linear-gradient(#007BFF,#0056b3); color:white; border:none; border-radius:8px; padding:7px 15px; cursor:pointer; font-size:14px; box-shadow:0 3px 5px rgba(0,0,0,0.3); transition:0.2s; }
 button:hover { transform: translateY(-1px); background: linear-gradient(#3399ff,#0066cc); }
-table { width:100%; border-collapse:collapse; background:white; box-shadow:0 0 10px rgba(0,0,0,0.1); font-size:12px; }
+table { width:100%; border-collapse:collapse; background:white; box-shadow:0 0 10px rgba(0,0,0,0.1); font-size:13px; }
 th, td { border:1px solid #ccc; padding:4px 6px; text-align:center; }
 th { background:#007BFF; color:white; }
 td { font-weight:bold; }
-td input[type="text"] { width:95%; border:none; background:transparent; text-align:center; font-family:'B Nazanin'; font-size:12px; }
+td input[type="text"] { width:95%; border:none; background:transparent; text-align:center; font-family:'B Nazanin'; font-size:13px; }
 .action-buttons button { margin:2px; padding:5px 10px; }
 .search-box { margin:15px 0; padding:10px; background:#eef2f9; border-radius:10px; box-shadow: inset 0 0 6px rgba(0,0,0,0.1); }
-
-/* اصلاح عرض ستون‌ها */
-th:nth-child(5), td:nth-child(5) { width:80px; }
-th:nth-child(9), td:nth-child(9) { width:200px; }
 </style>
 </head>
 <body>
@@ -50,13 +46,13 @@ th:nth-child(9), td:nth-child(9) { width:200px; }
 </select>
 
 <label>شماره سریال:</label>
-<input type="text" name="serial_number" required>
+<input type="text" name="serial_number" required style="width:100px;">
 
 <label>سایز:</label>
 <input type="text" name="size" required>
 
 <label>نوع رزوه:</label>
-<input type="text" name="thread_type">
+<input type="text" name="thread_type" style="width:120px;">
 
 <label>محل نگهداری:</label>
 <input type="text" name="location">
@@ -114,26 +110,16 @@ th:nth-child(9), td:nth-child(9) { width:200px; }
 
 <button type="submit">جستجو</button>
 </form>
-
-<!-- دکمه‌های حذف موردی و حذف همه فیلتر شده -->
-<form method="post" action="/delete_selected" id="deleteSelectedForm" onsubmit="return confirm('آیا از حذف موارد انتخاب شده اطمینان دارید؟')">
-<button type="submit">حذف موردی</button>
-</form>
-<form method="post" action="/delete_all_filtered" id="deleteAllFilteredForm" onsubmit="return confirm('آیا از حذف همه ابزارهای فیلتر شده اطمینان دارید؟')">
-<button type="submit">حذف همه‌ی فیلتر شده‌ها</button>
-</form>
 </div>
 
-<form id="toolsForm" method="post">
 <table>
 <thead>
 <tr>
-<th><input type="checkbox" id="selectAll" onclick="toggleAll(this)"></th>
 <th>ID</th>
 <th>نوع ابزار</th>
-<th>شماره سریال</th>
+<th style="width:100px;">شماره سریال</th>
 <th>سایز</th>
-<th style="width:80px;">نوع رزوه</th>
+<th style="width:120px;">نوع رزوه</th>
 <th>محل نگهداری</th>
 <th>وضعیت</th>
 <th style="width:120px;">عملیات</th>
@@ -143,12 +129,11 @@ th:nth-child(9), td:nth-child(9) { width:200px; }
 <tbody>
 {% for tool in tools %}
 <tr>
-<td><input type="checkbox" name="ids" value="{{ tool.id }}"></td>
 <td>{{ tool.id }}</td>
 <td>{{ tool.tool_type }}</td>
 <td>{{ tool.serial_number }}</td>
 <td>{{ tool.size }}</td>
-<td style="font-size:12px;">{{ tool.thread_type }}</td>
+<td style="width:120px; font-size:12px;">{{ tool.thread_type }}</td>
 <td>{{ tool.location }}</td>
 <td>{{ tool.status }}</td>
 <td class="action-buttons">
@@ -162,7 +147,6 @@ th:nth-child(9), td:nth-child(9) { width:200px; }
 {% endfor %}
 </tbody>
 </table>
-</form>
 
 <script>
 function updateDescription(id, value){
@@ -171,13 +155,6 @@ method:'POST',
 headers:{'Content-Type':'application/x-www-form-urlencoded'},
 body:'description=' + encodeURIComponent(value)
 }).then(res=>res.text()).then(console.log);
-}
-
-function toggleAll(source){
-checkboxes = document.getElementsByName('ids');
-for(var i=0;i<checkboxes.length;i++){
-    checkboxes[i].checked = source.checked;
-}
 }
 </script>
 </body>
