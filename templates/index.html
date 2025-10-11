@@ -3,119 +3,158 @@
 <head>
     <meta charset="UTF-8">
     <title>مدیریت ابزار در گردش</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <style>
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid #ccc; padding: 5px; text-align: center; font-size: 13px; font-weight: bold; }
-        th { background: #007bff; color: white; }
-        input, select, button { margin: 5px; padding: 6px; border-radius: 8px; border: 1px solid #aaa; font-family: 'B Nazanin'; }
-        button { background: #007bff; color: white; box-shadow: 2px 2px 5px #aaa; cursor: pointer; font-weight: bold; }
-        button:hover { background: #0056b3; }
-        td input.desc-input { width: 100%; border: none; background: #f9f9f9; font-size: 13px; font-family: 'B Nazanin'; }
+        table {
+            font-size: 13px;
+        }
+        th:nth-child(5) { width: 100px; } /* نوع رزوه کوچکتر */
+        th:nth-child(9) { width: 220px; } /* ستون شرح کمی عریض‌تر */
+        input[type="text"], select {
+            font-size: 13px;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+        }
     </style>
 </head>
 <body>
-    <h2>مدیریت ابزار در گردش</h2>
+    <h1>مدیریت ابزار در گردش</h1>
 
-    <form id="searchForm">
-        نوع ابزار:
-        <select name="tool_type">
-            <option value="">همه</option>
-            <option>Drill Collar</option>
-            <option>Stabilizer</option>
-            <option>Heavy Weight</option>
-            <option>Fishing</option>
-            <option>PUP Joint</option>
-            <option>Cross Over Sub</option>
-            <option>Short Sub</option>
-            <option>Casing Scrapper</option>
-            <option>Double Box</option>
-        </select>
-        شماره سریال: <input type="text" name="serial_number">
-        وضعیت:
-        <select name="status">
-            <option value="">همه</option>
-            <option>Ready to Use</option>
-            <option>Need to Repair</option>
-            <option>Need to Sandblast</option>
-            <option>Scrap</option>
-            <option>Class 2</option>
-            <option>Need to Inspection</option>
-        </select>
-        محل نگهداری: <input type="text" name="location">
-        <button type="submit">جستجو</button>
-        <button type="button" id="deleteSelected">🗑 حذف موردی</button>
-        <button type="button" id="deleteAll">🗑 حذف همه</button>
+    <form method="GET" action="/">
+        <div class="search-container">
+            <label>نوع ابزار:</label>
+            <select name="tool_type">
+                <option value="">همه</option>
+                <option value="Drill Pipe">Drill Pipe</option>
+                <option value="Cross Over Sub">Cross Over Sub</option>
+                <option value="Short Sub">Short Sub</option>
+                <option value="Casing Scrapper">Casing Scrapper</option>
+                <option value="Double Box">Double Box</option>
+            </select>
+
+            <label>شماره سریال:</label>
+            <input type="text" name="serial_number">
+
+            <label>وضعیت:</label>
+            <select name="status">
+                <option value="">همه</option>
+                <option value="In Use">In Use</option>
+                <option value="Idle">Idle</option>
+                <option value="Repair">Repair</option>
+                <option value="Scrap">Scrap</option>
+            </select>
+
+            <label>محل نگهداری:</label>
+            <input type="text" name="location">
+
+            <button type="submit" class="btn">جستجو</button>
+
+            <div class="action-buttons">
+                <button type="button" class="btn delete-selected" onclick="deleteSelected()">حذف موردی</button>
+                <button type="button" class="btn delete-all" onclick="deleteAllFiltered()">حذف همه</button>
+            </div>
+        </div>
     </form>
 
-    <form action="/upload_excel" method="post" enctype="multipart/form-data">
-        <input type="file" name="file" accept=".xlsx">
-        <button type="submit">آپلود Excel</button>
-    </form>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="flash">
+          {% for msg in messages %}
+            <p>{{ msg }}</p>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
 
-    <table id="dataTable">
-        <tr>
-            <th>شناسه</th><th>نوع ابزار</th><th>شماره سریال</th><th>سایز</th>
-            <th>نوع رزوه</th><th>محل نگهداری</th><th>وضعیت</th>
-            <th>گزارش</th><th>عملیات</th><th>شرح</th>
-        </tr>
-        {% for tool in data %}
-        <tr data-id="{{ tool[0] }}">
-            <td>{{ tool[0] }}</td>
-            <td>{{ tool[1] }}</td>
-            <td style="direction:ltr">{{ tool[2] }}</td>
-            <td style="direction:ltr">{{ tool[3] }}</td>
-            <td style="font-size:12px">{{ tool[4] }}</td>
-            <td>{{ tool[5] }}</td>
-            <td>{{ tool[6] }}</td>
-            <td><a href="{{ tool[7] }}" target="_blank">مشاهده</a></td>
-            <td>
-                <button onclick="deleteItem({{ tool[0] }})">حذف</button>
-            </td>
-            <td><input class="desc-input" value="{{ tool[8] or '' }}" onblur="updateDesc({{ tool[0] }}, this.value)"></td>
-        </tr>
-        {% endfor %}
+    <table border="1" cellpadding="6" cellspacing="0">
+        <thead>
+            <tr>
+                <th><input type="checkbox" id="checkAll"></th>
+                <th>ID</th>
+                <th>نوع ابزار</th>
+                <th>شماره سریال</th>
+                <th>سایز</th>
+                <th>نوع رزوه</th>
+                <th>محل نگهداری</th>
+                <th>وضعیت</th>
+                <th>شرح</th>
+                <th>گزارش بازرسی</th>
+                <th>عملیات</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tool in tools %}
+            <tr>
+                <td><input type="checkbox" class="row-check" value="{{ tool.id }}"></td>
+                <td>{{ tool.id }}</td>
+                <td>{{ tool.tool_type }}</td>
+                <td>{{ tool.serial_number }}</td>
+                <td>{{ tool.size }}</td>
+                <td>{{ tool.thread_type }}</td>
+                <td>{{ tool.location }}</td>
+                <td>{{ tool.status }}</td>
+                <td contenteditable="true" onblur="autoSave(this, {{ tool.id }})">{{ tool.description or '' }}</td>
+                <td>
+                    {% if tool.report_link %}
+                        <a href="{{ tool.report_link }}" target="_blank">مشاهده</a>
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
+                <td><a href="/delete/{{ tool.id }}" onclick="return confirm('آیا از حذف اطمینان دارید؟')">🗑</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
     </table>
 
     <script>
-    document.getElementById("searchForm").onsubmit = async (e) => {
-        e.preventDefault();
-        const params = new URLSearchParams(new FormData(e.target));
-        const res = await fetch("/search?" + params.toString());
-        const data = await res.json();
-        const table = document.getElementById("dataTable");
-        table.innerHTML = `<tr><th>شناسه</th><th>نوع ابزار</th><th>شماره سریال</th><th>سایز</th><th>نوع رزوه</th><th>محل نگهداری</th><th>وضعیت</th><th>گزارش</th><th>عملیات</th><th>شرح</th></tr>`;
-        data.forEach(row => {
-            table.innerHTML += `
-            <tr data-id="${row[0]}">
-                <td>${row[0]}</td><td>${row[1]}</td><td style="direction:ltr">${row[2]}</td><td>${row[3]}</td>
-                <td style="font-size:12px">${row[4]}</td><td>${row[5]}</td><td>${row[6]}</td>
-                <td><a href="${row[7]}" target="_blank">مشاهده</a></td>
-                <td><button onclick="deleteItem(${row[0]})">حذف</button></td>
-                <td><input class="desc-input" value="${row[8]||''}" onblur="updateDesc(${row[0]}, this.value)"></td>
-            </tr>`;
+        function autoSave(cell, id) {
+            const value = cell.innerText;
+            fetch(`/edit/${id}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: `field=description&value=${encodeURIComponent(value)}`
+            });
+        }
+
+        document.getElementById('checkAll').addEventListener('change', function() {
+            document.querySelectorAll('.row-check').forEach(ch => ch.checked = this.checked);
         });
-    };
 
-    async function deleteItem(id) {
-        if (!confirm("آیا از حذف این مورد اطمینان دارید؟")) return;
-        await fetch("/delete/" + id, { method: "POST" });
-        location.reload();
-    }
+        function deleteSelected() {
+            const selected = Array.from(document.querySelectorAll('.row-check:checked')).map(ch => ch.value);
+            if (selected.length === 0) {
+                alert("هیچ موردی انتخاب نشده است.");
+                return;
+            }
+            if (!confirm("آیا از حذف موارد انتخاب‌شده اطمینان دارید؟")) return;
 
-    document.getElementById("deleteAll").onclick = async () => {
-        if (!confirm("آیا از حذف همه رکوردها اطمینان دارید؟")) return;
-        await fetch("/delete_all", { method: "POST" });
-        location.reload();
-    };
+            const form = document.createElement("form");
+            form.method = "POST";
+            form.action = "/delete_selected";
 
-    async function updateDesc(id, value) {
-        await fetch(`/update_description/${id}`, {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({description: value})
-        });
-    }
+            selected.forEach(id => {
+                const input = document.createElement("input");
+                input.type = "hidden";
+                input.name = "ids";
+                input.value = id;
+                form.appendChild(input);
+            });
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+
+        function deleteAllFiltered() {
+            if (!confirm("آیا از حذف همه موارد جستجو شده اطمینان دارید؟")) return;
+            const form = document.querySelector("form");
+            form.action = "/delete_all_filtered";
+            form.method = "POST";
+            form.submit();
+        }
     </script>
 </body>
 </html>
