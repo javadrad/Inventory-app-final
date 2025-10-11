@@ -81,12 +81,17 @@ def add():
 
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute('''INSERT INTO inventory
-        (tool_type, serial_number, size, thread_type, location, status, report_link, description)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
-        (tool_type, serial_number, size, thread_type, location, status, report_link, description))
-    conn.commit()
-    conn.close()
+    try:
+        c.execute('''INSERT INTO inventory
+            (tool_type, serial_number, size, thread_type, location, status, report_link, description)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
+            (tool_type, serial_number, size, thread_type, location, status, report_link, description))
+        conn.commit()
+    except sqlite3.IntegrityError:
+        flash(f"شماره سریال {serial_number} تکراری است و ثبت نشد.")
+    finally:
+        conn.close()
+
     return redirect("/")
 
 @app.route("/edit/<int:id>", methods=["GET", "POST"])
@@ -137,7 +142,7 @@ def upload_excel():
     sheet = wb.active
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    skipped = []  # برای نگهداری شماره سریال‌های تکراری
+    skipped = []
 
     for idx, row in enumerate(sheet.iter_rows(values_only=True), start=1):
         if idx == 1:
@@ -161,7 +166,7 @@ def upload_excel():
     conn.close()
 
     if skipped:
-        flash(f"رکوردهای دارای شماره سریال تکراری نادیده گرفته شدند: {', '.join(skipped)}")
+        flash(f"شماره سریال‌های تکراری نادیده گرفته شدند: {', '.join(skipped)}")
 
     return redirect("/")
 
