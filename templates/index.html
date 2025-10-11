@@ -1,213 +1,161 @@
 <!DOCTYPE html>
 <html lang="fa">
 <head>
-    <meta charset="UTF-8">
-    <title>مدیریت ابزار در گردش</title>
-    <style>
-        body {
-            font-family: 'B Nazanin', sans-serif;
-            background: #f4f7fb;
-            direction: rtl;
-            text-align: center;
-            margin: 0;
-            padding: 20px;
-        }
-        h1 {
-            color: #003366;
-            text-shadow: 1px 1px 3px #ccc;
-        }
-        form {
-            margin-bottom: 25px;
-        }
-        label {
-            margin: 0 5px;
-            font-weight: bold;
-        }
-        input, select {
-            padding: 5px 8px;
-            margin: 3px;
-            border-radius: 5px;
-            border: 1px solid #bbb;
-            font-family: 'B Nazanin';
-            font-size: 14px;
-        }
-        button {
-            background: linear-gradient(#007BFF, #0056b3);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 7px 15px;
-            cursor: pointer;
-            font-size: 14px;
-            box-shadow: 0 3px 5px rgba(0,0,0,0.3);
-            transition: 0.2s;
-        }
-        button:hover {
-            transform: translateY(-1px);
-            background: linear-gradient(#3399ff, #0066cc);
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            font-size: 13px;
-        }
-        th, td {
-            border: 1px solid #ccc;
-            padding: 4px 6px;
-            text-align: center;
-        }
-        th {
-            background: #007BFF;
-            color: white;
-        }
-        td {
-            font-weight: bold;
-        }
-        td input[type="text"] {
-            width: 95%;
-            border: none;
-            background: transparent;
-            text-align: center;
-            font-family: 'B Nazanin';
-            font-size: 13px;
-        }
-        .action-buttons button {
-            margin: 2px;
-            padding: 5px 10px;
-        }
-        .search-box {
-            margin: 15px 0;
-            padding: 10px;
-            background: #eef2f9;
-            border-radius: 10px;
-            box-shadow: inset 0 0 6px rgba(0,0,0,0.1);
-        }
-    </style>
+<meta charset="UTF-8">
+<title>مدیریت ابزار در گردش</title>
+<style>
+body { font-family: 'B Nazanin', sans-serif; background: #f4f7fb; direction: rtl; text-align: center; margin:0; padding:20px; }
+h1 { color: #003366; text-shadow: 1px 1px 3px #ccc; }
+form { margin-bottom: 25px; }
+label { margin: 0 5px; font-weight: bold; }
+input, select { padding: 5px 8px; margin:3px; border-radius:5px; border:1px solid #bbb; font-family:'B Nazanin'; font-size:14px; }
+button { background: linear-gradient(#007BFF,#0056b3); color:white; border:none; border-radius:8px; padding:7px 15px; cursor:pointer; font-size:14px; box-shadow:0 3px 5px rgba(0,0,0,0.3); transition:0.2s; }
+button:hover { transform: translateY(-1px); background: linear-gradient(#3399ff,#0066cc); }
+table { width:100%; border-collapse:collapse; background:white; box-shadow:0 0 10px rgba(0,0,0,0.1); font-size:13px; }
+th, td { border:1px solid #ccc; padding:4px 6px; text-align:center; }
+th { background:#007BFF; color:white; }
+td { font-weight:bold; }
+td input[type="text"] { width:95%; border:none; background:transparent; text-align:center; font-family:'B Nazanin'; font-size:13px; }
+.action-buttons button { margin:2px; padding:5px 10px; }
+.search-box { margin:15px 0; padding:10px; background:#eef2f9; border-radius:10px; box-shadow: inset 0 0 6px rgba(0,0,0,0.1); }
+</style>
 </head>
 <body>
-    <h1>مدیریت ابزار در گردش</h1>
+<h1>مدیریت ابزار در گردش</h1>
 
-    <form action="/upload_excel" method="post" enctype="multipart/form-data">
-        <label>آپلود فایل Excel:</label>
-        <input type="file" name="file" accept=".xlsx">
-        <button type="submit">بارگذاری</button>
-    </form>
+<form action="/upload_excel" method="post" enctype="multipart/form-data">
+<label>آپلود فایل Excel:</label>
+<input type="file" name="file" accept=".xlsx">
+<button type="submit">بارگذاری</button>
+</form>
 
-    <form action="/add" method="post">
-        <label>نوع ابزار:</label>
-        <select name="tool_type" required>
-            <option value="">انتخاب کنید</option>
-            <option>PUP Joint</option>
-            <option>Fishing</option>
-            <option>Drill Pipe</option>
-            <option>Drill Collar</option>
-            <option>HWDP</option>
-            <option>Bit Sub</option>
-        </select>
+<form action="/add" method="post">
+<label>نوع ابزار:</label>
+<select name="tool_type" required>
+<option value="">انتخاب کنید</option>
+<option>PUP Joint</option>
+<option>Fishing</option>
+<option>Drill Pipe</option>
+<option>Drill Collar</option>
+<option>HWDP</option>
+<option>Bit Sub</option>
+<option>Cross Over Sub</option>
+<option>Short Sub</option>
+<option>Casing Scrapper</option>
+<option>Double Box</option>
+</select>
 
-        <label>شماره سریال:</label>
-        <input type="text" name="serial_number" required>
+<label>شماره سریال:</label>
+<input type="text" name="serial_number" required>
 
-        <label>سایز:</label>
-        <input type="text" name="size" required>
+<label>سایز:</label>
+<input type="text" name="size" required>
 
-        <label>نوع رزوه:</label>
-        <input type="text" name="thread_type">
+<label>نوع رزوه:</label>
+<input type="text" name="thread_type">
 
-        <label>محل نگهداری:</label>
-        <input type="text" name="location">
+<label>محل نگهداری:</label>
+<input type="text" name="location">
 
-        <label>وضعیت:</label>
-        <select name="status" required>
-            <option value="">انتخاب کنید</option>
-            <option>Ready to Use</option>
-            <option>Need to Repair</option>
-            <option>Need to Sandblast</option>
-            <option>Scrap</option>
-            <option>Class 2</option>
-            <option>Need to Inspection</option>
-        </select>
+<label>وضعیت:</label>
+<select name="status" required>
+<option value="">انتخاب کنید</option>
+<option>Ready to Use</option>
+<option>Need to Repair</option>
+<option>Need to Sandblast</option>
+<option>Scrap</option>
+<option>Class 2</option>
+<option>Need to Inspection</option>
+</select>
 
-        <label>توضیحات:</label>
-        <input type="text" name="description">
+<label>توضیحات:</label>
+<input type="text" name="description">
 
-        <button type="submit">ثبت ابزار</button>
-    </form>
+<button type="submit">ثبت ابزار</button>
+</form>
 
-    <div class="search-box">
-        <form method="get" action="/">
-            <label>نوع ابزار:</label>
-            <select name="tool_type">
-                <option value="">همه</option>
-                <option>PUP Joint</option>
-                <option>Fishing</option>
-                <option>Drill Pipe</option>
-                <option>Drill Collar</option>
-                <option>HWDP</option>
-                <option>Bit Sub</option>
-            </select>
+<div class="search-box">
+<form method="get" action="/">
+<label>نوع ابزار:</label>
+<select name="tool_type">
+<option value="">همه</option>
+<option>PUP Joint</option>
+<option>Fishing</option>
+<option>Drill Pipe</option>
+<option>Drill Collar</option>
+<option>HWDP</option>
+<option>Bit Sub</option>
+<option>Cross Over Sub</option>
+<option>Short Sub</option>
+<option>Casing Scrapper</option>
+<option>Double Box</option>
+</select>
 
-            <label>شماره سریال:</label>
-            <input type="text" name="serial_number" placeholder="جستجو...">
+<label>شماره سریال:</label>
+<input type="text" name="serial_number" placeholder="جستجو...">
 
-            <label>وضعیت:</label>
-            <select name="status">
-                <option value="">همه</option>
-                <option>Ready to Use</option>
-                <option>Need to Repair</option>
-                <option>Need to Sandblast</option>
-                <option>Scrap</option>
-                <option>Class 2</option>
-                <option>Need to Inspection</option>
-            </select>
+<label>وضعیت:</label>
+<select name="status">
+<option value="">همه</option>
+<option>Ready to Use</option>
+<option>Need to Repair</option>
+<option>Need to Sandblast</option>
+<option>Scrap</option>
+<option>Class 2</option>
+<option>Need to Inspection</option>
+</select>
 
-            <label>محل نگهداری:</label>
-            <select name="location">
-                <option value="">همه</option>
-                <option>Warehouse A</option>
-                <option>Warehouse B</option>
-                <option>Rig Site</option>
-                <option>Yard</option>
-            </select>
+<label>محل نگهداری:</label>
+<input type="text" name="location" placeholder="جستجو...">
 
-            <button type="submit">جستجو</button>
-        </form>
-    </div>
+<button type="submit">جستجو</button>
+</form>
+</div>
 
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>نوع ابزار</th>
-                <th>شماره سریال</th>
-                <th>سایز</th>
-                <th style="width: 100px;">نوع رزوه</th>
-                <th>محل نگهداری</th>
-                <th>وضعیت</th>
-                <th style="width: 120px;">عملیات</th>
-                <th style="width: 170px;">شرح / توضیحات</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for tool in tools %}
-            <tr>
-                <td>{{ tool.id }}</td>
-                <td>{{ tool.tool_type }}</td>
-                <td>{{ tool.serial_number }}</td>
-                <td>{{ tool.size }}</td>
-                <td style="font-size: 12px;">{{ tool.thread_type }}</td>
-                <td>{{ tool.location }}</td>
-                <td>{{ tool.status }}</td>
-                <td class="action-buttons">
-                    <a href="/edit/{{ tool.id }}"><button>✏️ ویرایش</button></a>
-                    <a href="/delete/{{ tool.id }}" onclick="return confirm('آیا مطمئن هستید؟')"><button>🗑️ حذف</button></a>
-                </td>
-                <td><input type="text" value="{{ tool.description or '' }}" readonly></td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>نوع ابزار</th>
+<th>شماره سریال</th>
+<th>سایز</th>
+<th style="width:90px;">نوع رزوه</th>
+<th>محل نگهداری</th>
+<th>وضعیت</th>
+<th style="width:120px;">عملیات</th>
+<th style="width:200px;">شرح / توضیحات</th>
+</tr>
+</thead>
+<tbody>
+{% for tool in tools %}
+<tr>
+<td>{{ tool.id }}</td>
+<td>{{ tool.tool_type }}</td>
+<td>{{ tool.serial_number }}</td>
+<td>{{ tool.size }}</td>
+<td style="font-size:12px;">{{ tool.thread_type }}</td>
+<td>{{ tool.location }}</td>
+<td>{{ tool.status }}</td>
+<td class="action-buttons">
+<a href="/edit/{{ tool.id }}"><button>✏️ ویرایش</button></a>
+<a href="/delete/{{ tool.id }}" onclick="return confirm('آیا مطمئن هستید؟')"><button>🗑️ حذف</button></a>
+</td>
+<td>
+<input type="text" value="{{ tool.description or '' }}" onblur="updateDescription({{ tool.id }}, this.value)">
+</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+
+<script>
+function updateDescription(id, value){
+fetch('/update_description/' + id, {
+method:'POST',
+headers:{'Content-Type':'application/x-www-form-urlencoded'},
+body:'description=' + encodeURIComponent(value)
+}).then(res=>res.text()).then(console.log);
+}
+</script>
 </body>
 </html>
