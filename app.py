@@ -137,7 +137,7 @@ def upload_excel():
     sheet = wb.active
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    skipped = []  # شماره سریال‌های تکراری
+    skipped = []  # برای نگهداری شماره سریال‌های تکراری
 
     for idx, row in enumerate(sheet.iter_rows(values_only=True), start=1):
         if idx == 1:
@@ -146,7 +146,7 @@ def upload_excel():
             continue
         tool_type, serial_number, size, thread_type, location, status = row[:6]
 
-        # بررسی رکورد تکراری
+        # بررسی رکورد تکراری بر اساس شماره سریال
         c.execute("SELECT id FROM inventory WHERE serial_number=?", (serial_number,))
         if c.fetchone():
             skipped.append(serial_number)
